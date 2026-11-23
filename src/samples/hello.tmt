@@ -1,8 +1,8 @@
-@meta{
-  title: リリースノート
-  date: 2026-09-06
-  tags: list( release, tomet )
-}
+::meta(
+  title: "リリースノート"
+  date: "2026-09-06"
+  tags: (release, tomet)
+)
 
 =[ リリースノート ]
 

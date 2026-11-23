@@ -1,11 +1,10 @@
-@config(
-  export: {
-    type: commonmark,
-    path: "AGENTS.md"
-  }
+::id(agents)
+::export(
+  type: commonmark
+  path: "AGENTS.md"
 )
 
-${macro.generated_by(self.path)}
+$macro.generated_by(self::path)
 
 =[ TometWebsite ]
 
