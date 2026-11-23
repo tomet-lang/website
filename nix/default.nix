@@ -29,7 +29,7 @@ flake-parts.lib.mkFlake { inherit inputs; } {
       };
 
       treefmt = import ./formatter.nix {
-        tomet = sisho.tomet;
+        inherit (sisho) tomet;
       };
     };
 }

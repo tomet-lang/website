@@ -14,8 +14,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    #= Tool
-    # sisho brings tomet and twrit.
+    # --- Tool ---
     sisho.url = "github:tomet-lang/sisho";
   };
 

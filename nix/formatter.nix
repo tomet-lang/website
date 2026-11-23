@@ -2,22 +2,70 @@
 {
   projectRootFile = "flake.nix";
   programs = {
-    #= Nix
+    #--- Nix ---
     nixfmt.enable = true;
     statix.enable = true;
     deadnix.enable = true;
-    #= Shell
+    #--- Shell ---
     shfmt.enable = true;
     shellcheck.enable = true;
+    #--- Rust ---
+    rustfmt.enable = true;
+    taplo = {
+      enable = true;
+      settings = {
+        formatting = {
+          align_entries = true;
+          align_comments = true;
+          reorder_keys = false;
+        };
+        rule = [
+          {
+            keys = [
+              "dependencies"
+              "dev-dependencies"
+              "build-dependencies"
+              "workspace.dependencies"
+            ];
+            formatting = {
+              reorder_keys = true;
+            };
+          }
+        ];
+      };
+    };
 
-    #= Web
-    prettier.enable = true;
+    #--- Biome ---
+    biome = {
+      enable = true;
+      formatCommand = "format";
+      settings = {
+        formatter = {
+          enabled = true;
+          useEditorconfig = true;
+        };
+        linter.enabled = false;
+        assist.enabled = false;
+      };
+      includes = [
+        "*.json"
+        "*.jsonc"
+        #--- Web ---
+        "*.js"
+        "*.ts"
+        "*.mjs"
+        "*.mts"
+        "*.cjs"
+        "*.cts"
+        "*.jsx"
+        "*.tsx"
+      ];
+    };
   };
+
   settings = {
-    # https://github.com/numtide/treefmt-nix/issues/171
     global.excludes = [
-      "dist/*"
-      "package-lock.json"
+      "*.lock"
     ];
 
     formatter = {
@@ -34,15 +82,9 @@
     shfmt = {
       includes = [ "*.sh" ];
     };
-    prettier = {
-      includes = [
-        "*.astro"
-        "*.css"
-        "*.js"
-        "*.mjs"
-        "*.ts"
-        "*.json"
-      ];
+
+    rustfmt = {
+      includes = [ "*.rs" ];
     };
   };
 }
