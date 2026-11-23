@@ -1,0 +1,72 @@
+::id(readme)
+::export(
+  type: commonmark
+  path: "README.md"
+)
+::meta(
+  lang:      "en"
+  lang_name: "English"
+)
+
+$macro.generated_by(self::path)
+
+=[ Tomet ]
+
+// @fixme| ファイルパスでのフィルタが望ましい。
+{$ vault::docs
+  .filter(d => d::filename == "readme.tmt" && exists(d::meta.lang))
+  .sort(d => d::meta.lang)
+  .map(d => d.link(d::meta.lang_name))
+  .join(" | ")
+}
+
+Tome to me.
+
+Tomet is a human-readable, structured markup language and Rust toolchain.
+It combines clear syntax for typed data and cross-document links with multi-format export.
+
+==[ Example ]
+
+$raw(tmt("tmtroot/examples/overview.tmt")::source, lang: "tmt")
+
+// @draft| See Also
+==[ Try it ]
+
+===[ 1. Install ]
+
+Install `sisho` and `tomet` together using the @link[Quick install](tmt:tmtroot/docs/install_tools.tmt#quick-install):
+
+```bash
+`` nix profile install github:tomet-lang/sisho#toolchain
+```
+
+===[ 2. Write hello.tmt ]
+
+Create a document `hello.tmt`:
+
+$raw(tmt("tmtroot/examples/hello.tmt")::source, lang: "tmt")
+
+===[ 3. Check it ]
+
+Validate and format your document:
+
+```bash
+`` sisho check .
+`` sisho fix .
+```
+
+Continue with the @link[Quick Start](tmt:tmtroot/docs/quick_start.tmt).
+
+==[ Learn more ]
+
+- @link[Quick Start](tmt:tmtroot/docs/quick_start.tmt): walkthrough for creating, checking, and exporting documents.
+- @link[Install](tmt:tmtroot/docs/install_tools.tmt): complete installation instructions for CLI tools and libraries.
+- @link[Why Tomet](tmt:tmtroot/docs/why/root.tmt): design motivations and comparison with other formats.
+- @link[Specification](tmt:tmtroot/spec/tome.tmt): the language syntax and semantics specification.
+- @link[Editors](tmt:tmtroot/docs/install_tools.tmt#editors): extensions and setup for VS Code, Zed, Helix, and Neovim.
+- @link[Contributing](tmt:tmtroot/contributing.tmt): guidelines for contributing to Tomet.
+
+==[ Contributing ]
+
+Contributions are welcome.
+Repository layout, building from source, running tests, and verification steps are documented in @link[CONTRIBUTING](tmt:tmtroot/contributing.tmt).

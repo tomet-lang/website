@@ -1,0 +1,312 @@
+=[ 組み込み要素 ]
+
+36個。`tomet-semantics` の `BUILTIN_KINDS` が唯一の登録場所である。裸で書ける
+名前はここにあるものと、その文書自身の `@kind` が指す語彙のものだけで、それ以外は
+名前空間を書くか `@use` で束縛する。
+
+**分類はパスに入らない。** `@link` は `@std.link` の省略形で、`std` の下は平ら
+である。`@std.model.link` とは書かない。ここでの分類は読む側の地図であって綴りでは
+なく、`構造` は名前空間ではない。
+
+==[ 三つの軸 ]
+
+分類とは別に、要素はコードが持つ三つの軸で記述される。分類は「何のためにあるか」で
+分けるが、こちらは「どう置けるか」を決める。
+
+@table[
+[ 軸          ][ 値              ][ 何を決めるか             ][ 読む場所            ]
+[ `region`    ][ preamble / body ][ 文書のどこに置けるか     ][ `builtin_region`    ]
+[ `display`   ][ block / inline  ][ 単独で立つか地の文の中か ][ `required_shape`    ]
+[ `singleton` ][ 真偽            ][ 一文書に一つまでか       ][ `builtin_singleton` ]
+]
+
+`@use` が、二つの軸が別物であることの証拠になっている。preamble にしか置けないが、
+いくつでも書ける。
+
+`display` が「どちらでも」の要素がある。`link` `embed` `file` `dir` `draft`
+`fixme` の
+五つで、一行に単独で置いても構造の誤りではない。一つのファイル、一枚の画像を見せる
+書き方であり、抜けは文の中の句のこともあれば節まるごとのこともある。
+`shape_mismatch` が捕まえるのは、段落の中の `heading` のように壊れるものだけ。
+
+==[ 宣言 ]
+
+文書が自分について言うもの。八つ。
+
+@table[
+[ 要素        ][ region   ][ display ][ singleton ][ 何であるか            ]
+[ `kind`      ][ preamble ][ block   ][ ○         ][ 何の文書か            ]
+[ `version`   ][ preamble ][ block   ][ ○         ][ 文書の版              ]
+[ `meta`      ][ preamble ][ block   ][ ○         ][ 文書についてのデータ  ]
+[ `config`    ][ preamble ][ block   ][ ○         ][ 文書の処理設定        ]
+[ `settings`  ][ preamble ][ block   ][ ○         ][ 描画設定              ]
+[ `blueprint` ][ preamble ][ block   ][ ○         ][ 生成物の雛形          ]
+[ `use`       ][ preamble ][ block   ][ ―         ][ 語彙を scope に入れる ]
+[ `include`   ][ preamble ][ block   ][ ―         ][ 他の文書を差し込む    ]
+]
+
+```tm
+`` @kind(@string)
+`` @version(@string)
+`` @meta(format:json)
+`` @config(format:json)
+`` @config(export: { type: commonmark, path: "README.md" })
+``
+`` // blueprint は生成物の雛形。識別子・入力・データがそのまま:
+`` // 何であるか(blueprint)、何を対象にするか(位置引数)、自身について何を言うか。
+`` // 実体化のとき @blueprint(X) は @kind(X) に昇格する。
+`` @blueprint(@string){ version: @string, description: @string }
+``
+`` // @import は二つの仕事を一語に負わせていた。分けて、名前を別にした。
+`` @use(@namespace)                // 語彙を scope に入れる。パスではなく名前空間名
+`` @use(@namespace){ as: @string } // as: は名前が衝突したときの逃げ道だけ
+`` @include(@file)                 // 認識だけ。展開はまだ何もしない
+```
+
+==[ 語彙 ]
+
+語彙文書そのものを書くための六つ。`@vocabulary(vocabulary)` という文書に置かず
+組み込みにしてあるのは、その文書を読むのに、その文書が定義する機構が要るから。
+代わりに、kind の語彙はこの六つの名前を宣言できなくなる（`@use` で入れた名前空間
+なら、裸で書かれないので宣言できる）。
+
+@table[
+[ 要素         ][ region   ][ display ][ singleton ][ 何であるか                     ]
+[ `vocabulary` ][ preamble ][ block   ][ ○         ][ 語彙文書の頭。名前空間を名乗る ]
+[ `element`    ][ body     ][ block   ][ ―         ][ 宣言される要素ひとつ           ]
+[ `param`      ][ body     ][ block   ][ ―         ][ 名前と型を持つ項目ひとつ       ]
+[ `args`       ][ body     ][ block   ][ ―         ][ `(args)` スロットの記述        ]
+[ `data`       ][ body     ][ block   ][ ―         ][ `{value}` スロットの記述       ]
+[ `content`    ][ body     ][ block   ][ ―         ][ `[content]` スロットの記述     ]
+]
+
+```tm
+`` // vocabulary は語彙。どの要素名が存在するかを宣言する。blueprint とは別物で、
+`` // blueprint は実体化で消費されるが語彙は消費されず、必要になる時期も違う
+`` // (語彙は文書を読むのに、blueprint は検証するのに要る)。
+`` @vocabulary(@string){ version: @string }
+`` @element(@string){ display: block, region: preamble, singleton: @bool }[ 説明 ]
+`` @param(@string){ type: @type, required: @bool, positional: @bool, default: @any }[ 説明 ]
+`` @args{ ... }                  // @element の中。(args) スロットの記述
+`` @data{ open: @bool, ... }     // @element の中。{value} スロットの記述
+`` @content{ allow: (@name) }    // @element の中。[content] スロットの記述
+```
+
+`param` が宣言の側、`args` が呼ぶ側の名前である。表に出るスロットが `(args)` の
+ままなのはそのため。
+
+==[ 印 ]
+
+文書が自分について言う印。二つ。どちらも警告として報告され、`tomet check` は通る。
+
+@table[
+[ 要素    ][ region ][ display    ][ singleton ][ 何であるか       ]
+[ `draft` ][ body   ][ どちらでも ][ ―         ][ ここに文章が無い ]
+[ `fixme` ][ body   ][ どちらでも ][ ―         ][ 文章はあるが直す ]
+]
+
+```tm
+`` @draft[ 何が足りないか ]
+`` @fixme[ 何が間違っているか ]
+```
+
+見れば決まる境目である。`draft` は不在、`fixme` は誤った存在。出力でも違い、
+draft は無い出力に印を付け、fixme は出せる出力に注記を付ける。
+
+`//(TODO)` ではないのは、AST にコメントのノードが無く、数えることも印を保つことも
+できないため。`std` にあるのは、書きかけの箇所がどの kind でも起きるからで、どの
+kind の語彙も所有できず、共有語彙にすると穴のある文書すべてに `@use` が要る。
+
+==[ 外を指す ]
+
+文書の外や、文書の別の場所を指す六つ。
+
+@table[
+[ 要素         ][ region ][ display    ][ singleton ][ 何であるか             ]
+[ `references` ][ body   ][ block      ][ ―         ][ リモート接続の容器     ]
+[ `links`      ][ body   ][ block      ][ ―         ][ リンクの容器           ]
+[ `link`       ][ body   ][ どちらでも ][ ―         ][ リンクひとつ           ]
+[ `embed`      ][ body   ][ どちらでも ][ ―         ][ 他のファイルを埋め込む ]
+[ `file`       ][ body   ][ どちらでも ][ ―         ][ ファイルを名指す       ]
+[ `dir`        ][ body   ][ どちらでも ][ ―         ][ ディレクトリを名指す   ]
+]
+
+```tm
+`` // link/embed のキーは `target` ひとつだけ。何を指しているか(url/file/dir/tm/id/ref)は
+`` // キーではなく、target 文字列自身の接頭辞から導かれる (tomet_semantics::target_scheme)。
+`` @link("https://example.com")[ display_name ]   // 位置引数は target に正規化される
+`` @link(target:"file:a/b.tmt")[ display_name ]
+`` @link(target:"ref:note")
+``
+`` @embed(file:@file)[alt]
+``
+`` @references[
+``   @id(asdf-asdf):()
+``   @id(asdf-asdf):[]
+``   @id(asdf-asd2):{tag: important}
+``   @id(asdf-asdf):(){}[]
+`` ]
+```
+
+旧い per-scheme キーは、target 一本に統一する前の綴りである。回収されるのは
+`tomet_semantics::EXPLICIT_SCHEMES` が挙げるものだけで、
+それ以外のキーは回収されず target が空のまま残るので、`@link(https:...)` や
+`@link(tmt:...)` は動かない。
+
+```tm
+`` @link(url:@url)[ display_name ]
+`` @link(file:@file)[ display_name ]
+`` @link(tm:@tmt_file)[ display_name ]
+`` @link(id:@id)[ display_name ]
+`` @link(ref:@ref)
+```
+
+==[ file: と dir: ]
+
+`file:` はファイルを指し、`dir:` はディレクトリを指す。`tomet check-links` は
+それぞれ「実在してファイルであること」「実在してディレクトリであること」を見る。
+
+分けているのは、**どちらのつもりだったかを綴りが残さないと検査できない**から
+である。以前は `file:` 一本で、リンク検査は実在しか見ていなかった。だから
+`file:./spec/` は通り、読む側は「ファイルがある」と受け取り、実際にあるのは
+ディレクトリだった。RFC 8089 は file スキームでディレクトリを区別しないが、
+あれは構文だけを決めていて、パスが何を指すかはこの層の問いである。
+
+`dir:` の末尾スラッシュは任意で、意味を持たない。スキームが既に
+「ディレクトリ」と言っているので、スラッシュはそれを二度言うことになる。
+`dir:./why/` と `dir:./why` は同じものを指す。
+
+==[ @file と @dir ]
+
+`@link` はリンクを作る。`@file` と `@dir` は作らない。散文が
+「`codeblock.rs` を読め」と言うとき、そこへ連れていく申し出はしていない。
+
+```tm
+`` @file(crates/tomet-config/src/lib.rs)
+`` @dir(docs/spec)
+`` @file(crates/tomet-config/src/lib.rs)[`lib.rs`]
+```
+
+検査は `@link(file:...)` と同じで、実在してファイル（ディレクトリ）である
+ことを見る。要素名が種類を言うので、値に `file:`/`dir:` は付けない。付ければ
+二度言うことになる。
+
+これが無かった間、この種の言及はバッククォートで書かれていた。何も検査
+できない。このリポジトリには 453 箇所あり、パスに見える 164 種のうち実在
+するのは 64 で、残りは総称（`.md`、`a/b/c`）か基点違いだった。**注釈の無い
+参照は、散文と見分けられないので検査できない。**
+
+===[ 配置で `[content]` の役割が変わる ]
+
+要素はひとつで、用途がふたつあるため。
+
+@table[
+[ 置き方 ][ 何を表すか   ][ `[content]` の役割             ]
+[ inline ][ 散文中の言及 ][ パスの代わりに出る（短い別名） ]
+[ block  ][ 一覧の一行   ][ パスの隣に出る（説明）         ]
+]
+
+一覧の行で説明だけを出すと、読者はどのパスの話か分からない。言及で長い
+パスを出すと、文の邪魔になる。
+
+この二つ目の用途は `dirs` 語彙が持っていた。`@dirs`/`@file` を宣言して
+「`std` の `@link(target:"file:...")` とは別物で、こちらはリンクではなく
+ツリーの一項目を表す」と説明していたもので、std に上がったのであの語彙は
+消えた。
+
+==[ 構造 ]
+
+本文の骨格になる九つ。すべて block。
+
+@table[
+[ 要素        ][ region ][ display    ][ singleton ][ 何であるか     ]
+[ `heading`   ][ body   ][ block      ][ ―         ][ 見出し         ]
+[ `ol`        ][ body   ][ block      ][ ―         ][ 順序つきリスト ]
+[ `ul`        ][ body   ][ block      ][ ―         ][ 順序なしリスト ]
+[ `table`     ][ body   ][ block      ][ ―         ][ 表             ]
+[ `codeblock` ][ body   ][ block      ][ ―         ][ コードブロック ]
+[ `quote`     ][ body   ][ どちらでも ][ ―         ][ 引用           ]
+[ `callout`   ][ body   ][ block      ][ ―         ][ 注意書き       ]
+[ `card`      ][ body   ][ block      ][ ―         ][ 題名つきの区画 ]
+[ `hr`        ][ body   ][ block      ][ ―         ][ 水平線         ]
+]
+
+```tm
+`` @heading(level: @int)[ display_name ]
+`` @codeblock(lang:@language)[ @code ]
+`` @quote[ @content ]
+`` @callout(@variant)[ @content ]     // 位置引数は variant。`{title:}` も取る
+`` @callout(variant:info, title:@string)[ @content ]
+``
+`` // card は分類を持たない、ただの題名+本文の区画。callout のように
+`` // variant を持たない代わりに、位置引数もない — title は常に named。
+`` @card[ @content ]
+`` @card(title:@string)[ @content ]
+``
+`` - (marker:@string) content         // ul
+`` -. (marker:@string) content        // ol
+```
+
+==[ 文字 ]
+
+地の文の中で一語や一字を扱う五つ。
+
+@table[
+[ 要素        ][ region ][ display ][ singleton ][ 何であるか ]
+[ `em`        ][ body   ][ inline  ][ ―         ][ 強調       ]
+[ `strong`    ][ body   ][ inline  ][ ―         ][ 強い強調   ]
+[ `mark`      ][ body   ][ inline  ][ ―         ][ ハイライト ]
+[ `strikeout` ][ body   ][ inline  ][ ―         ][ 取り消し線 ]
+[ `ruby`      ][ body   ][ inline  ][ ―         ][ 読み仮名   ]
+]
+
+`@ruby[漢字](rt:"かんじ")` -- `[content]` が本文、`rt` エントリが読み。`em` などと
+違って `content`/`args` 両方を使うのは、対応する CommonMark 記法が無いのでショート
+カットを設計する必要がなく、`@link(target:...)[title]` と同じ「名前付きエントリ +
+content」の形にそのまま乗れるため。`rt` は必須で、文字列以外や省略は空の読みとして
+扱われる（検証は未実装 -- `allow:` の名前検証が無いのと同じスコープ判断）。
+
+=[ 組み込みでないもの ]
+
+書けるが、`std` の名前ではないので裸では通らない。汎用要素として扱われる。
+
+```tm
+`` @tag{}
+`` @index()[ title ]
+`` @style()
+`` @color()
+```
+
+=[ 名前は通るが何もしないもの ]
+
+組み込みとして認識され、検証も通り、それ以上のことが起きないもの。
+
+@table[
+[ 綴り                  ][ 何が起きないか                              ]
+[ `@include(@file)`     ][ 差し込む文書を読まない。本文は自分の分だけ  ]
+[ `@config(style: ...)` ][ `config.style` に入るが、読む側が一つも無い ]
+]
+
+`@config(style:)` は未実装より悪い。`tomet-semantics` の `config.rs` が値を
+受け取って保持し、そこから先で誰も読まない。書いた側には効いたように見える。
+
+=[ 補間 ]
+
+`${...}` と `$...` は要素ではなく式である。組み込み関数と名前空間は
+@link[`spec/builtin-functions.tmt`](file:docs/spec/builtin-functions.tmt) を見る。
+
+```tm
+`` ${func(args) ...}
+`` $func(args)
+`` $(@var)
+```
+
+演算子は無い。算術は関数形のみ (`${sub(1, 2)}`)。入れるなら `-` の前後に空白が
+要る — `a-b` は識別子ひとつである。
+
+=[ コメント ]
+
+```tm
+`` // comment
+`` /* comments */
+```

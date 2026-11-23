@@ -1,0 +1,186 @@
+::kind(api)
+::meta(
+  crate:        tomet-config
+  dependencies: list(tomet-ast, tomet-ast-parser, tomet-declaration, tomet-semantics, tomet-semantics-core, tomet-spec-derive, tomet-tree)
+  dependents:   list(tomet, tomet-benches, tomet-cli, tomet-convert-standalone, tomet-edit, tomet-field-utils, tomet-formatter, tomet-indexer, tomet-links, tomet-load, tomet-load-config, tomet-printer, tomet-spec, tomet-style, tomet-tests, tomet-vault, tomet-workspace)
+)
+
+=[ tomet-config ]
+
+==[ tomet-config ]
+
+Configuration parsing and styling rule definitions ([`Config`], [`FormatConfig`], [`MetaConfig`], [`WorkspaceConfig`]).
+
+==[ Architecture & Responsibilities ]
+
+- ("Centralized Configuration Domain") `tomet-config` owns configuration data structures and pure parsing
+([`load_config_from_str`]). Finding and reading a config file off
+disk is `tomet-load-config`'s job, one layer up.
+- ("Root Group Modules")
+  - (groups) Root configuration groups ([`FormatConfig`], [`MetaConfig`], [`WorkspaceConfig`], [`RegistryConfig`], [`ApiConfig`]).
+  - (discovery) Configuration parsing and error handling.
+  - (tree) AST tree normalization and path lookup utilities.
+
+==[ Module discovery ]
+
+Config parsing and error reporting. Finding and reading a config file
+off disk is `tomet-load-config`'s job, one layer up -- this stays
+pure so `tomet-config` itself can stay layer 3 and disk-free.
+[`ConfigError::Io`] exists for that crate's `load_config_from_file`
+to construct; nothing in this crate ever produces it.
+
+===[ Enums ]
+
+====[ enum ConfigError ]
+
+===[ Functions ]
+
+====[ fn load_config_from_str ]
+
+==[ Module groups ]
+
+Root configuration groups corresponding to `::settings{ ... }` / `::config{ ... }` sections.
+
+Each submodule defines a dedicated strongly-typed configuration struct for a specific domain:
+
+- ("`format`") Heading, link, element, callout, list, and table formatting rules ([`FormatConfig`], [`GroupOrder`]).
+- ("`meta`") Document metadata formatting and schema rules ([`MetaConfig`], [`FieldConfig`]).
+- ("`workspace`") Vault file indexing exclusions and unswept rules ([`WorkspaceConfig`]).
+- ("`registry`") Blueprints, vocabularies and dictionaries declarations ([`RegistryConfig`]).
+
+===[ Module format ]
+
+Formatting and printer rule configuration ([`FormatConfig`], [`GroupOrder`]).
+
+====[ Structs ]
+
+=====[ struct FormatConfig ]
+
+Formatting and printer rule configuration.
+
+====[ Enums ]
+
+=====[ enum GroupOrder ]
+
+===[ Module meta ]
+
+Metadata styling rules and per-field constraints ([`MetaConfig`], [`FieldConfig`]).
+
+====[ Structs ]
+
+=====[ struct FieldConfig ]
+
+Per-field metadata schema and constraint rules.
+
+=====[ struct MetaConfig ]
+
+Document metadata formatting and schema rules.
+
+===[ Module registry ]
+
+Blueprint, vocabulary and dictionary file registry declarations ([`RegistryConfig`]).
+
+====[ Structs ]
+
+=====[ struct RegistryConfig ]
+
+Blueprint, vocabulary and dictionary file registry declarations.
+
+===[ Module workspace ]
+
+Workspace-level configuration ([`WorkspaceConfig`]).
+
+====[ Structs ]
+
+=====[ struct WorkspaceConfig ]
+
+Workspace-level configuration for vault indexing and file discovery.
+
+==[ Module layer ]
+
+One config file's contribution to a stacked [`Config`](crate::Config).
+
+A vault's configuration is a stack of files -- the vault config, then each folder config on the
+way down to a document, then the document's own declarations -- and the nearer layer wins, key
+by key. Each concern is a declaration of its own (`::format`, `::fields`, `::workspace`,
+`::blueprints`, `::vocabularies`, `::dictionaries`, `::macros`, `::vars`), and a layer keeps what
+each one said.
+They are of three kinds, and the kind decides how they are read: tables from a name to a
+definition (`::macros`, `::vars`, `::fields`, `::blueprints`, `::vocabularies`,
+`::dictionaries`: merged by name), knobs of a tool (`::format`, `::workspace`, `::export`:
+merged key by key), and pointers to other files (`::import`, not implemented yet).
+Merging happens on those values, before they become a [`Config`](crate::Config): a typed group
+cannot tell a key that was never written from one written with its default, so two typed groups
+cannot be merged without guessing.
+
+===[ Structs ]
+
+====[ struct ConfigLayer ]
+
+The settings, name tables, macros and variables one file declares, ready to be stacked.
+
+===[ Functions ]
+
+====[ fn registry_entries ]
+
+The `(name, path)` pairs a document registers in its `::blueprints`, `::vocabularies` or
+`::dictionaries` (`kind`), in the order written. An entry that is not a reference to a file is left out.
+
+==[ Module schema ]
+
+Runtime configuration schema models and trait definitions.
+
+===[ Structs ]
+
+====[ struct ConfigEntrySpec ]
+
+Specification of a single configuration key/entry.
+
+====[ struct ConfigGroupSpec ]
+
+Specification of a configuration group (e.g. `::config.format`, `::config.workspace`).
+
+===[ Traits ]
+
+====[ trait ConfigSpecProvider ]
+
+Trait implemented by configuration structs (typically via `#[derive(Config)]`)
+to provide runtime schema metadata.
+
+===[ Functions ]
+
+====[ fn all_config_specs ]
+
+Returns the runtime specifications of all registered configuration groups.
+
+==[ Module tree ]
+
+AST tree normalization and path-based lookup utilities for configuration.
+
+===[ Functions ]
+
+====[ fn get_path ]
+
+Traverses nested `Value::Map` nodes along `path`, returning the referenced value if found.
+
+====[ fn collect_paths ]
+
+Reads a declared list of paths. A single string is accepted as a
+one-element list shorthand.
+
+====[ fn merge_entry ]
+
+Recursively merges `key` and `value` into `target`, normalizing dotted keys
+into hierarchical `Value::Map` entries while preserving flat keys for `meta`.
+
+==[ Structs ]
+
+===[ struct Config ]
+
+Full Tomet document / vault configuration.
+
+==[ Type Aliases ]
+
+===[ type PrinterConfig ]
+
+Type alias for backward compatibility with earlier code referencing `PrinterConfig`.

@@ -42,5 +42,5 @@
 
 ===[ `website`（公開ポータル） ]
 
--| `fs-catasto` の `catasto.repo`（`submodule: false`）を用いて `repos/` 配下に `atlas` と各ツールリポジトリを取得し、Astro で見た目に変換して公開する。
+-| `fs-catasto` の `catasto.git` / `catasto.upstream` を用いて、必要な `vault.config.tmt`・スキーマ・辞書・文書ディレクトリ（`dict/`, `docs/`, `tmtroot/` 等）のみを `.git` なしで `repos/` 配下へコピーし、木構造の決定的な `sha256` と `commit` を `catasto.lock` に固定したうえで Astro で見た目に変換して公開する。
 -| `website/tmtroot/` 自身には、当リポジトリの管理文書（`readme.tmt`、`contributing.tmt`、`agents.tmt`、`dev/notes/`）と、サイトの UI や LP に直結する文字・サンプルのみを置く。

@@ -15,8 +15,23 @@
     callout: (style: (content: block))
   )
 )
+::vocabulary(
+  catasto: @file(tmtroot/schema/catasto@1.0.0.vocabulary.tmt)
+)
+::blueprint(
+  catasto: @file(tmtroot/schema/catasto@1.0.0.blueprint.ctmt)
+)
 ::workspace(
-  // `.tomet/` links into the documents of the tomet revision this site renders;
-  // they are that repository's to check.
-  unswept: ("node_modules", "dist", ".astro", ".tomet")
+  // `.tomet/` links `@tomet/astro` and `@tomet/wasm`, `repos/` holds
+  // catasto-managed source repositories, and `tmtroot/schema/` holds
+  // upstream schemas fetched from fs-catasto.
+  unswept: (
+    "node_modules",
+    "dist",
+    ".astro",
+    ".tomet",
+    "repos",
+    "tmtroot/schema/catasto@1.0.0.vocabulary.tmt",
+    "tmtroot/schema/catasto@1.0.0.blueprint.ctmt",
+  )
 )

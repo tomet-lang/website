@@ -1,0 +1,28 @@
+=[ Sample ]
+
+=[ Application ]
+
+@card(title:"tomet-cli")
+| TUI操作やCommand経由で、Tometを対応フォーマットに変換、編集、検索が可能。
+;@card(title:"tomet-web-editor")
+| Webからtometのエディタを使用できる。
+;@card(title:"tomet-shelf")
+| tometを使用した本の見た目を求めた静的サイトジェネレータ。
+| 軽量で比較的高速
+;@card(title:"twrit")
+| アプリ開発で、開発の規範、チェックを行える。
+;@card(title:"oneline")
+| tometの一部の構文を活かし、"一行に意味をもたせる"をモットウにした、派生記法。
+
+=[ Website ]
+
+@card(title: "tomet-website")
+| 公式ウェブサイト
+| tometとAstroを使用。
+
+=[ Example ]
+
+@card(title: "tomet-sandbox")
+| Wikipediaなどの実際に運用されている膨大な情報を拝借し、
+| Tometの耐久性を試したり、バグを見つけ、
+| 改善を試みるサンドボックス

@@ -1,0 +1,22 @@
+::kind(blueprint)
+::blueprint(rfc){
+  description: "Request for Comments template"
+  vars: (
+    title: ( type: string, prompt: "RFC Title" )
+    author: ( type: string, default: "Anonymous" )
+  )
+}
+::id(${uuid()})
+::meta(
+  title:  ${vars.title}
+  author: ${vars.author}
+  status: draft
+)
+
+=[ Summary ] {id: summary}
+
+=[ Motivation ] {id: motivation}
+
+=[ Detailed Design ] {id: design}
+
+=[ Drawbacks ] {id: drawbacks}

@@ -1,5 +1,5 @@
 /**
- * Topic metadata and grouping helpers for the published `spec/` documentation.
+ * Topic metadata and grouping helpers for published `atlas` and `spec/` documentation.
  */
 export interface SpecTopic {
   /** Subdirectory under `spec/`, or `""` for top-level `spec/*.tmt` files. */
@@ -23,6 +23,7 @@ export const SPEC_TOPICS: readonly SpecTopic[] = [
 ];
 
 export interface DocEntry {
+  collection: "atlas" | "docs";
   slug: string;
   title: string;
   sourcePath: string;
@@ -31,6 +32,11 @@ export interface DocEntry {
 
 export interface SpecGroup extends SpecTopic {
   entries: DocEntry[];
+}
+
+export interface DocGroup extends SpecGroup {
+  /** Stable HTML anchor id for index and ToC links. */
+  id: string;
 }
 
 /**
@@ -50,6 +56,16 @@ export function docTopic(slug: string): string {
 export function docLabel(slug: string, topicDir: string): string {
   const prefix = topicDir ? `spec/${topicDir}/` : "spec/";
   return slug.startsWith(prefix) ? slug.slice(prefix.length) : slug;
+}
+
+/**
+ * Display label for a document inside its group (title for `atlas` guides,
+ * short topic-relative slug for `spec/` references).
+ */
+export function entryLabel(entry: DocEntry, topicDir: string): string {
+  return entry.collection === "atlas"
+    ? entry.title
+    : docLabel(entry.slug, topicDir);
 }
 
 /**
@@ -88,6 +104,37 @@ export function groupSpecDocs(docs: readonly DocEntry[]): SpecGroup[] {
       label: dir,
       blurb: `${dir} に関する仕様`,
       entries: sortEntries(entries),
+    });
+  }
+
+  return groups;
+}
+
+/**
+ * Groups all published docs with `atlas` ecosystem guides first,
+ * followed by `tomet` specification topics.
+ */
+export function groupAllDocs(docs: readonly DocEntry[]): DocGroup[] {
+  const atlasDocs = docs
+    .filter((d) => d.collection === "atlas")
+    .sort((a, b) => a.slug.localeCompare(b.slug));
+  const specDocs = docs.filter((d) => d.collection === "docs");
+
+  const groups: DocGroup[] = [];
+  if (atlasDocs.length > 0) {
+    groups.push({
+      id: "ecosystem",
+      dir: "",
+      label: "エコシステム",
+      blurb: "Tomet エコシステムの全体像と各リポジトリの役割分担",
+      entries: atlasDocs,
+    });
+  }
+
+  for (const specGroup of groupSpecDocs(specDocs)) {
+    groups.push({
+      ...specGroup,
+      id: `topic-${specGroup.dir || "general"}`,
     });
   }
 

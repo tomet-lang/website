@@ -1,0 +1,29 @@
+::kind(element)
+::id(std.fields)
+
+=[ 全容 ]
+
+```tm
+`` ::field(
+``   aliases:  ( type: list, always_newline: true )
+``   created:  ( type: datetime, format: rfc3339, offset: "+09:00" )
+``   url.wiki: ( type: list, always_newline: true )
+``   author:   ( type: string, required: true, about: [ 文書の著者 ] )
+`` )
+```
+
+`::meta` の項目の型と形を宣言する。項目の名前をキーにした表を `::field(...)` に渡し、値のタプルがその項目の宣言になる。名前は `.` を含んでもよい（`url.wiki`）。`about:` はその項目の説明。
+
+複数形 `::fields` は廃止した。書くと `tomet check` が、`::field` に書き直すよう報告する。
+
+- `type`: 項目の型（`string` `list` `list(string)` `datetime` `uuid` など）。
+- `format` `offset`: 日時の書き方。
+- `always_newline`: この項目を、必ず改行して書く。
+
+キーの一覧は @file(tmtroot/generated/config.tmt)。
+
+型の宣言は検査にも使われる。`uuid` と宣言された項目が UUID でなければ、`tomet check` が報告する。`::id` の型も、ここの `id` の宣言に照らして検査される（@file(tmtroot/spec/declarations/std.id.declaration.tmt)）。
+
+=[ 書く場所 ]
+
+`.tmt` の文書の先頭に一つ。@term(tomet#vault-config)、フォルダの @term(tomet#folder-config)、文書自身のどれにも書ける。項目の名前ごとに重なり、同じ項目は、内側の層で書かれたキーだけが上書きされる。

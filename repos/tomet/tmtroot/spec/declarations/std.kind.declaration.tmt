@@ -1,0 +1,45 @@
+::kind(element)
+::id(std.kind)
+
+=[ 全容 ]
+
+```tm
+`` ::kind(bookmark)
+```
+
+文書の種別を宣言する。この文書を検証するスキーマを選ぶのがこれの仕事。
+
+```tm
+`` ::kind(j.daily)
+```
+
+名前空間つきも書ける。値としては単なる文字列で、`.` に特別な意味はない。
+
+=[ 版 ]
+
+二つ目の引数（`version`）はその種別の定義の版で、型は `version`（@file(tmtroot/spec/syntax/type.tmt)）。省いてもよい。`0` も許され、整数も一つの `version` である。
+
+```tm
+`` ::kind(j.daily, 2)
+`` ::kind(j.daily, 1.0)
+`` ::kind(j.daily, version: "1.0.0")
+```
+
+形が違えば `tomet check` が報告する。引数は名前と版の二つまでで、三つ目も報告される。
+
+書かれた版はいま何とも照合されない。
+
+=[ 書く場所 ]
+
+文書の先頭、トップレベルに一つ。
+
+```tm
+`` ::kind(config)
+`` ::id(doc-kWBcIUUz)
+```
+
+種別は `::meta` の中には書かない。`::meta(type: ...)` は旧い書き方で、`::kind` に置き換わっている。手元の文書を移すには:
+
+```bash
+`` tomet refactor --check --meta-kind .   # 残っている箇所を数える
+```

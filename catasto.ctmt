@@ -1,0 +1,18 @@
+::kind(catasto, version: "1.0.0")
+::upstream(
+  fs_catasto: catasto.git("https://github.com/tomet-lang/fs-catasto.git", rev: main, root: "tmtroot/schema")
+  atlas:      catasto.git("https://github.com/tomet-lang/atlas.git", rev: main)
+  tomet:      catasto.git("https://github.com/tomet-lang/tomet.git", rev: main)
+)
+
+// --- Vocabularies ---
+"tmtroot/schema/catasto@1.0.0.vocabulary.tmt": catasto.upstream(fs_catasto, path: "catasto@1.0.0.vocabulary.tmt")
+"tmtroot/schema/catasto@1.0.0.blueprint.ctmt": catasto.upstream(fs_catasto, path: "catasto@1.0.0.blueprint.ctmt")
+
+// --- Repo Documents ---
+"repos/atlas/vault.config.tmt": catasto.upstream(atlas, path: "vault.config.tmt")
+"repos/atlas/.tomet/schema":    catasto.upstream(atlas, path: ".tomet/schema")
+"repos/atlas/dict":             catasto.upstream(atlas, path: "dict")
+"repos/atlas/docs":             catasto.upstream(atlas, path: "docs")
+"repos/tomet/vault.config.tmt": catasto.upstream(tomet, path: "vault.config.tmt")
+"repos/tomet/tmtroot":          catasto.upstream(tomet, path: "tmtroot")

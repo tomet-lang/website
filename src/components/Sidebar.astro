@@ -1,5 +1,5 @@
 ---
-import { docLabel, groupSpecDocs, type DocEntry } from '../lib/sections';
+import { entryLabel, groupAllDocs, type DocEntry } from '../lib/sections';
 
 interface Props {
   docs: DocEntry[];
@@ -7,13 +7,13 @@ interface Props {
 }
 
 const { docs, current } = Astro.props;
-const groups = groupSpecDocs(docs);
+const groups = groupAllDocs(docs);
 ---
 
 <aside class="sidebar">
   <h2>はじめに</h2>
   <ul>
-    <li><a href="/docs/" aria-current={current === '' ? 'page' : undefined}>仕様の地図</a></li>
+    <li><a href="/docs/" aria-current={current === '' ? 'page' : undefined}>ドキュメント一覧</a></li>
   </ul>
   {
     groups.map((group) => (
@@ -23,7 +23,7 @@ const groups = groupSpecDocs(docs);
           {group.entries.map((d) => (
             <li>
               <a href={`/docs/${d.slug}`} aria-current={d.slug === current ? 'page' : undefined}>
-                {docLabel(d.slug, group.dir)}
+                {entryLabel(d, group.dir)}
               </a>
             </li>
           ))}

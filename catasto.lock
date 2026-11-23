@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "files": {
+    "repos/atlas/.tomet/schema": {
+      "sha256": "927e78625f3b63adf83cf0d222a81dfccb8fa1eb3f4ae8a97cbc77e5bd5280bc",
+      "source": {
+        "git": "https://github.com/tomet-lang/atlas.git",
+        "rev": "main",
+        "path": ".tomet/schema"
+      },
+      "commit": "395eba06975a94839935074d8e10a272a3b3db84"
+    },
+    "repos/atlas/dict": {
+      "sha256": "f54b66d7d0b4a112098bd024257e77d05229eb03c75cd7e9f83a62792fe509ef",
+      "source": {
+        "git": "https://github.com/tomet-lang/atlas.git",
+        "rev": "main",
+        "path": "dict"
+      },
+      "commit": "395eba06975a94839935074d8e10a272a3b3db84"
+    },
+    "repos/atlas/docs": {
+      "sha256": "ef72083d8dae55076cfe6b9531c32b4dfcb6f3ab937fcf1ee6a25ace15bbb056",
+      "source": {
+        "git": "https://github.com/tomet-lang/atlas.git",
+        "rev": "main",
+        "path": "docs"
+      },
+      "commit": "395eba06975a94839935074d8e10a272a3b3db84"
+    },
+    "repos/atlas/vault.config.tmt": {
+      "sha256": "19ff35f7fe0973a15c3a2f01fea053841ed7151cbb01be87f81df5425231254a",
+      "source": {
+        "git": "https://github.com/tomet-lang/atlas.git",
+        "rev": "main",
+        "path": "vault.config.tmt"
+      },
+      "commit": "395eba06975a94839935074d8e10a272a3b3db84"
+    },
+    "repos/tomet/tmtroot": {
+      "sha256": "a63a8cf3a982e746f3b3c9da06fda5540d7580902fb1781fea255e14147cd868",
+      "source": {
+        "git": "https://github.com/tomet-lang/tomet.git",
+        "rev": "main",
+        "path": "tmtroot"
+      },
+      "commit": "3b7e771c93204a5c248bd184fae54c87caf176cf"
+    },
+    "repos/tomet/vault.config.tmt": {
+      "sha256": "09af9e6f1fdbfeb3ce5412f314724ad627c6a34b046dbb1f8ca26b55aff35b2d",
+      "source": {
+        "git": "https://github.com/tomet-lang/tomet.git",
+        "rev": "main",
+        "path": "vault.config.tmt"
+      },
+      "commit": "3b7e771c93204a5c248bd184fae54c87caf176cf"
+    },
+    "tmtroot/schema/catasto@1.0.0.blueprint.ctmt": {
+      "sha256": "11f859f41e9722e58a3a9cab166dadbea775cb8dbc4828f971351db6f26a961e",
+      "source": {
+        "git": "https://github.com/tomet-lang/fs-catasto.git",
+        "rev": "main",
+        "path": "tmtroot/schema/catasto@1.0.0.blueprint.ctmt"
+      },
+      "commit": "9a84e88dc4538efe248b687003458c0b60cc75b9"
+    },
+    "tmtroot/schema/catasto@1.0.0.vocabulary.tmt": {
+      "sha256": "0e55ace45c47d102a2a1d8cc92b9ccce1f0031eaeb219a898b9048a1c10ad719",
+      "source": {
+        "git": "https://github.com/tomet-lang/fs-catasto.git",
+        "rev": "main",
+        "path": "tmtroot/schema/catasto@1.0.0.vocabulary.tmt"
+      },
+      "commit": "9a84e88dc4538efe248b687003458c0b60cc75b9"
+    }
+  }
+}

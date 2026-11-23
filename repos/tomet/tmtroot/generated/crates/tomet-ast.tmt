@@ -1,0 +1,350 @@
+::kind(api)
+::meta(
+  crate:        tomet-ast
+  dependencies: list(tomet-span)
+  dependents:   list(cotomet, cotomet-eval, serde_cotomet, tomet, tomet-address, tomet-ast-parser, tomet-cli, tomet-config, tomet-convert-standalone, tomet-declaration, tomet-deps, tomet-edit, tomet-expr, tomet-extract, tomet-formatter, tomet-html, tomet-indexer, tomet-links, tomet-load, tomet-lowering, tomet-lsp, tomet-markdown, tomet-pandoc, tomet-printer, tomet-search, tomet-semantics, tomet-semantics-core, tomet-spec, tomet-stats, tomet-style, tomet-tests, tomet-transform, tomet-tree, tomet-typst, tomet-validator, tomet-validator-blueprint, tomet-validator-core, tomet-validator-profile, tomet-validator-rule, tomet-vault, tomet-workspace)
+)
+
+=[ tomet-ast ]
+
+==[ tomet-ast ]
+
+Shared AST and `Value` data models for the Tomet toolchain ([`File`], [`Block`],
+[`Inline`], [`Element`], [`ElementView`], [`BodyView`], [`Declaration`], [`Interpolation`],
+[`Hole`], [`ListItem`], [`Value`], [`Span`]).
+
+==[ Design Policy ]
+
+- ("Pure Data Models & Structural Accessors Only") `tomet-ast` is the foundational AST crate referenced across the workspace,
+depending only on `tomet-span`, `serde`, and `unicode-width`.
+It contains only struct/enum definitions and pure inherent methods for construction
+(`new`, `with_*`) and structural inspection (`as_str()`, `get()`, `is_null()`).
+- ("A Node's Role Is Its Type") A `${...}` is an [`Interpolation`] (an expression and a span), not an [`Element`]:
+it has no name, no groups and no connects, so it is a variant of [`Block`],
+[`Inline`] and [`Value`] and no walker over elements ever meets one. Reach every
+interpolation of a file through `tomet_tree::for_each_interpolation`.
+A `::name(...)` is a [`Declaration`]: sits in the file preamble header ([`File::header`]),
+about the file and attached to nothing, so it has no placement and takes no connect.
+A `:name(...)` is a [`Connect`]: metadata about its owner, with no id, no connects of its own
+and no placement. A `<?matcher(...)>` is a [`Hole`] (a matcher, optional, in place of a name).
+`<...>` is one family in the @em[syntax] (the CST has one `SLOT` node, whatever the mark inside); the
+AST has no node for the family. It names nodes by role, never by spelling, and has a node only
+for what tomet interprets or what carries structure to walk: a hole is a [`Hole`], a name tag
+(`<PATH>`) is text. Merging nodes of different structure into one type with a field to tell
+them apart is what split `Element` before; a new kind of seat is judged by that rule.
+A list item is a [`ListItem`] and a nameless `(marker)[content]` entry of a `{...}` group is a
+[`Bare`]: neither has a name, so neither is an [`Element`], whose name is mandatory.
+[`ListItem::as_element_view`] gives a zero-copy [`ElementView`] of the element a `-@name(...)`
+item is.
+What nodes share is [`Data`] (`(args)` and the `{...}` [`Group`]), and their body groups can
+be inspected uniformly via [`BodyView`]; `[content]` and `#(id)` stay on the roles that take them.
+- ("Clear Crate Boundaries") Semantics: Classification of element meanings (links, `::meta`, `::config`) lives in `tomet-semantics`.
+Traversal & Manipulation: Generic tree traversal algorithms live in `tomet-tree`.
+Formatting & Printing: Serialization to `.tmt` text lives in `tomet-style` and `tomet-printer`.
+Validation: Field formatting and lint validation live in `tomet-validator`.
+- ("Span Equality Contract") [`Span`] implements a custom `PartialEq` that always returns `true` so that structural
+equality comparisons (`assert_eq!(doc1, doc2)`) ignore source positions. Use
+[`Span::exact_eq()`] when exact source position comparisons are required.
+
+==[ Structs ]
+
+===[ struct Section ]
+
+A hierarchical section: introduced by `=`, `==`, etc.
+
+Contains its nesting level (`=` is 1, `==` is 2, etc.), title inlines,
+optional arguments (`(id: intro)`), optional value group (`{attrs}`),
+connects (`:as(...)`), and child blocks (paragraphs, lists, sub-sections)
+scoped to this section.
+
+===[ struct List ]
+
+A `-` (unordered) or `-.` (ordered) list: first-class, like [`Section`],
+rather than a named [`Element`] holding bare sub-`Element`s.
+
+No `args`/`content`/`value`, unlike `Section` -- none of the three had a
+concrete use case (a caption for the whole list, attrs on the list as a
+whole, an ordered list's starting number) when this type was designed;
+add one later if a real want surfaces, with the use case stated
+alongside the field. `id`/`connects` were kept: `id` mirrors `Section`'s
+own anchor-reference use (`#(id)` on the whole list), and `connects` is
+what a `:rule(allow:list(...))` attached to the list itself (restricting
+what its own items may be) needs to live on.
+
+===[ struct ListItem ]
+
+One item of a [`List`]: a plain `- content`, or `-@name(...) content`
+(the combine notation), which is the item @em[and] an element of that name.
+
+It takes the groups an element does -- `(args)` is the item's marker,
+`{value}` its attributes, `#(id)` and `:connect`s -- and its `content` is
+always there (possibly empty). It has no placement: an item is always a
+block of its own list. `name` is `None` for a plain item and the element's
+name for the combine notation.
+
+`sublist` is the one genuinely new thing: an indented list directly
+below this item. Typed as `Option<List>`, not `Option<Vec<Block>>`,
+because the parser only ever produces one specific shape here (another
+list) -- giving it its own field makes that a compiler-checked fact
+instead of a convention.
+
+===[ struct Paragraph ]
+
+===[ struct SoftBreak ]
+
+===[ struct LineBreak ]
+
+===[ struct RawText ]
+
+Verbatim text, captured byte-for-byte from source. See
+[`Inline::Raw`] for why this is a separate type from [`Text`].
+
+===[ struct Text ]
+
+A run of prose text, folded from source the way any wrapped inline
+content is. Invariant: `value` never contains `'\n'` or `'\r'` -- a source
+line break becomes an [`Inline::SoftBreak`] or [`Inline::LineBreak`]
+instead of a character here. Verbatim text that may contain real newlines
+(code block bodies) is [`RawText`], not this.
+
+===[ struct Name ]
+
+An element's name, split into its optional namespace and its own name.
+
+The separator is `.`: `deck.bookmark` is `Name { namespace:
+Some("deck"), name: "bookmark" }`. Exactly two namespaces may be
+written bare: `std`, which the language carries, and the document's
+own `::kind`, declared on its first line. A name from any other
+namespace -- anything brought in with `::use` -- is always written
+out, and a bare name in neither of the two is an error rather than
+falling back to a `Custom` kind. That check is `Bindings::classify`
+in `tomet-semantics`, not the free `classify_std` beside it, which only
+knows `std`. This type only records the split.
+
+Both halves are ASCII identifiers (`[A-Za-z_][A-Za-z0-9_-]*`). `.` is
+the separator, so it is deliberately @em[not] an identifier character
+here -- unlike in map keys, where `url.wiki` is one flat key.
+
+===[ struct Id ]
+
+An element's own id, written `#(foobar)` right after its own
+`(args)[content]{value}` groups and before any `:name(...)` connect.
+
+A plain `String`, not [`Value`]: `#(...)` is parsed with a narrower,
+scalar-only grammar (a bare identifier-like token or a quoted
+string) than the general value grammar `(args)`/`{value}` use, so a
+map/seq/call can never end up here -- unlike `Name`, there is no
+namespace concept for an id. No ASCII restriction, unlike [`Name`]:
+the content is a value, not a structural identifier, so it is as
+free as any other string value (e.g. `@line(天音かなた)` elsewhere in
+this codebase already allows non-ASCII value text).
+
+===[ struct Declaration ]
+
+A `::name(args){data}[content]#(id)` declaration about the file itself,
+not content in it.
+
+It takes the groups an element does and is introduced by `::` instead of
+`@`. The sigil says @em[where] it belongs -- in the file's preamble header
+([`File::header`]), the run of `::` declarations at the top -- so the preamble can be
+found without loading any vocabulary. Which names may be written this way is the
+`Region` a vocabulary declares for them, and whether one takes `[content]`
+is that vocabulary's call too, so the parser does not decide it.
+
+It sits in [`File::header`]: a `::` has to open its line and stand alone on it,
+and so has no [`Placement`]. And it is attached to nothing, so unlike an
+[`Element`] it takes no `:connect`.
+
+===[ struct Bare ]
+
+A nameless entry of a `{...}` group, `(marker)[content]`: the container
+already supplies what it is (the `(1)[...]` entries of `@links{ ... }`),
+so it has no name. It takes the groups an element does and no connect.
+
+===[ struct Hole ]
+
+A `<?matcher(name, args){options}>[content]` hole: the description of a value that is
+not there yet, in a pattern.
+
+It is a box, `<...>`, whose head (the `?` mark, the matcher and the `(args)` and `{options}`
+groups) is inside and whose `[content]` follows the `>`. Its groups are read by the
+same code as an element's. Differences: its head is a @em[matcher], not an element name, and it is
+optional (`<?>` and `<?(n)>` have none); and it takes no `:connect`. A box that does not close
+or does not fit is text, so ordinary prose such as `本当に?(はい)` or `a < b` is never a hole.
+
+A hole sits where an element sits, so it is a variant of [`Block`], [`Inline`], [`Entry`]
+and [`Value`], in the same tree a document is: a pattern is written in, and printed as,
+ordinary tomet, and `parse_document` reads one like any other construct.
+
+The matcher is not an element name: `<?meta>` is not the `meta` element. What a matcher
+means, and what a hole matches, is the host's (tandr's), not tomet's. See
+`tmtroot/spec/syntax/hole.tmt`.
+
+===[ struct Connect ]
+
+A `:name(...)` connect stacked after an element, a section or a list
+(`@x(...):as(y):rule(...)`): metadata about its owner, not content of the
+document. It takes `(args)`, `[content]` and `{value}` like an element does,
+and nothing else: no `#(id)` (an id belongs to the owner, written before the
+first connect), no connects of its own, and no placement.
+
+===[ struct Data ]
+
+The data a node carries: its `(args)` and its `{value}` group, each
+optional and at most one of each.
+
+Every node that takes either holds them as a `Data`, so what reads them
+(the walkers, the printer, `merge_values`) is written once for all of
+them. `[content]` and `#(id)` are not in here on purpose: they differ in
+kind (child blocks, an address) and not every node takes them.
+
+===[ struct Element ]
+
+An `@name(args)[content]{value}` element.
+
+The one element sigil is `@`; it says "an element starts here" and nothing
+else. Whether the element stands as a block or belongs to a paragraph is
+[`Placement`], which the parser derives from position, and origin is
+carried by [`Name`]'s namespace. Two earlier axes were tried and carried no
+information: `<T>` vs `@name` (official vs user-defined, but both
+classified through the same arm) and `#name` vs `@name` (shape, which
+`tomet-semantics`' `required_shape` already knew). `#(id)` is not a second
+sigil either: it is [`Element::id`], a slot in the element's own groups.
+
+A node that has no name of its own, a [`Bare`] entry or a plain list item,
+is not an element at all.
+
+`(args)` / `[content]` / `{value}`, each optional and at most one of each,
+in any order in the source.
+
+`id` is a single slot, written `#(foobar)`, read after those three
+groups but strictly before any connect -- see [`Id`].
+
+`connects` is unrelated to those three: it is the `:name(...)` family
+stacked after them (`@x(...):as(y):rule(...)`), zero or more, each a
+[`Connect`]. Order-preserving, empty when nothing follows.
+
+===[ struct ElementView ]
+
+A zero-copy borrowed view of an element's fields.
+
+Represents an [`Element`] or any node that stands as an element (such as a
+combine list item `-@name(...)` via [`ListItem::as_element_view`]) without
+heap allocation or cloning child blocks and data.
+
+===[ struct BodyView ]
+
+A zero-copy borrowed view of a node's body: its data (`(args)` and `{value}`),
+optional child `[content]`, and optional `#(id)`.
+
+Shared by nodes that carry body groups ([`ElementView`], [`Declaration`],
+[`Bare`], [`Connect`], [`Hole`]).
+
+===[ struct Group ]
+
+The entries of a `{...}` group, in source order.
+
+`{...}` is always data: it parses uniformly into [`Entry`] items in
+source order, whatever the element is called. "Is this a data map or a
+list of children?" is no longer a parse-time branch -- it is a view
+computed downstream in `tomet-semantics`, which is what lets the parser
+build the tree without consulting any element vocabulary.
+
+`Group` holds a source-order sequence of entries (`Group(pub Vec<Entry>)`)
+and provides map operations exclusively for [`Entry::Pair`] entries.
+Non-pair entries ([`Entry::Element`], [`Entry::Bare`], [`Entry::Hole`]) are
+handled directly by callers through exhaustive pattern matching.
+
+===[ struct Interpolation ]
+
+A `${...}` (or `$name(...)`) interpolation: an expression to be evaluated
+where it stands.
+
+It is not an [`Element`]: it has no name, no `(args)` / `[content]` and no
+`#(id)`, and it never takes a `:connect`. It holds an expression and the
+span of the whole `$`-form, and nothing else. It sits in three places, as
+[`Block::Interp`], [`Inline::Interp`] and [`Value::Interp`].
+
+===[ struct InterpExpr ]
+
+One node of a `${...}` interpolation's parsed expression tree.
+
+===[ struct File ]
+
+A Tomet file: its `::name(...)` declarations in the preamble header, followed by its body.
+
+For prose documents (`.tmt`), `body` defaults to `Vec<Block>`.
+For structured data files (`.ctmt`), `body` is [`Value`].
+
+==[ Enums ]
+
+===[ enum Value ]
+
+A pure data value: the subset of Tomet with a direct serde
+equivalent (no headings, prose, or links).
+
+===[ enum Block ]
+
+===[ enum Inline ]
+
+===[ enum Placement ]
+
+Where an element sits: on its own as a block, or inside running text.
+
+The parser derives this from position alone -- never from the element's
+name, so the vocabulary-free invariant holds. An element is
+[`Placement::Block`] when it is in block context (document start, after
+a blank line, or after a block closed) @em[and] it ends its line; anything
+else is [`Placement::Inline`].
+
+It is recorded rather than implied by the tree because [`Element`]'s
+`content` is a `Vec<Inline>`: an element written at a line start inside
+another element's `[content]` is a block, and this field is the only
+place that survives.
+
+This is placement, not shape. Which shape an element is @em[allowed] to
+take is a vocabulary question, answered by `tomet-semantics`'
+`required_shape` and checked against this field by `shape_mismatch`.
+
+===[ enum Entry ]
+
+One entry inside an element's `{value}` group: either a `key: value`
+pair or a nested element.
+
+`Pair`'s shape is exactly [`Value::Map`]'s entry type, which is what
+lets the data view be rebuilt from a group without copying any other
+structure.
+
+===[ enum InterpExprKind ]
+
+===[ enum BinaryOp ]
+
+A binary operator in an expression.
+
+There is no arithmetic and no `!`: both are deliberately functions
+(`add`, `not`), because `-` already means a list marker and part of an
+identifier, and the expression language keeps symbols to the minimum.
+`&&` and `||` are the only operators that may skip their right-hand
+side, which is why they are symbols and not functions.
+
+===[ enum Literal ]
+
+==[ Functions ]
+
+===[ fn softbreak_join ]
+
+What a [`SoftBreak`] renders as when it is folded into plain running
+text, given the character immediately before and after it.
+
+This is the fold rule tomet has always applied when joining a wrapped
+line: a space, except between two East-Asian-wide characters, where a
+space would open a visible gap in the middle of a sentence. It lives
+here, shared, because it used to be baked into the parser and is now
+needed by several independent call sites instead: HTML, Typst, and
+Pandoc export always fold this way, and so do the plain-text-only
+corners of the printer and Markdown export (an image's `alt`, a
+codeblock's extracted text) that cannot themselves contain a literal
+newline. The printer's and Markdown export's own @em[prose] rendering
+chooses differently -- a real `'\n'`, to keep a wrapped line looking
+wrapped -- which is exactly the point of leaving this choice to the
+renderer instead of deciding it once in the parser.

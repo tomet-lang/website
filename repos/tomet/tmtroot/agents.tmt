@@ -1,0 +1,64 @@
+::id(agents)
+::export(
+  type: commonmark
+  path: "AGENTS.md"
+)
+::meta(
+  lang: "en"
+)
+
+$macro.generated_by(self::path)
+
+=[ Tomet ]
+
+==[ Agent Behavior ]
+
+$include(tmt("tmtroot/dev/agent/behavior.tmt"))
+
+==[ Core Philosophy & Principles ]
+
+$include(tmt("tmtroot/dev/convention/principles.tmt"))
+
+==[ Single Source of Truth & Documentation ]
+
+$include(tmt("tmtroot/dev/convention/document.tmt"))
+
+==[ Code Comments ]
+
+$include(tmt("tmtroot/dev/convention/code-comment.tmt"))
+
+==[ Project overview ]
+
+Read the root @file(README.md) for what the project is, and @file(CONTRIBUTING.md) for the repository layout,
+building and testing, the contribution workflow, commit conventions and verification steps.
+Before a non-trivial change:
+- Read the `//!` module doc of every crate you are touching.
+-| Read the `crate-layering` entry in the root @file(".writ.tmt") for how the layers depend
+ | on each other. There is no prose overview standing between you and those -- there was,
+ | and it drifted.
+
+$include(tmt("tmtroot/dev/agent/writ.tmt"))
+
+==[ Environment & Tooling ]
+
+$include(tmt("tmtroot/dev/howto/nix.tmt"))
+
+==[ Verifying changes ]
+
+$include(tmt("tmtroot/dev/howto/test.tmt"))
+
+$include(tmt("tmtroot/dev/howto/tools.tmt"))
+
+===[ Writing tests ]
+
+$include(tmt("tmtroot/dev/convention/test.tmt"))
+
+==[ Task tracking & Workspaces ]
+
+$include(tmt("tmtroot/dev/agent/task.tmt"))
+
+==[ Commits & Version Control (jj) ]
+
+$include(tmt("tmtroot/dev/howto/jj.tmt"))
+
+$include(tmt("tmtroot/dev/agent/commit-policy.tmt"))

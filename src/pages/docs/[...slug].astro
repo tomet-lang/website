@@ -1,20 +1,12 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Sidebar from '../../components/Sidebar.astro';
-import { requireCollection, requireRenderedHtml } from '../../lib/content';
-import type { DocEntry } from '../../lib/sections';
+import { loadPublishedDocs, requireRenderedHtml } from '../../lib/content';
 
 export async function getStaticPaths() {
-  const allDocs = await requireCollection('docs');
+  const { entries, docs } = await loadPublishedDocs();
 
-  const docs: DocEntry[] = allDocs.map((entry) => ({
-    slug: entry.data.slug,
-    title: entry.data.title,
-    sourcePath: entry.data.sourcePath,
-    description: entry.data.description,
-  }));
-
-  return allDocs.map((entry) => ({
+  return entries.map((entry) => ({
     params: { slug: entry.id },
     props: { entry, docs },
   }));

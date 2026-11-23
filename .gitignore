@@ -7,8 +7,8 @@
 #= Project-specific
 .astro/
 node_modules/
-# Links into the locked tomet revision, made by the dev shell (nix/dev.nix).
-.tomet/
+# Links into the locked tomet toolchain packages, made by the dev shell (nix/dev.nix).
+/.tomet/
 
 # -----------------------------------------------------------------------
 # Shared ignore rules

@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css';
-import { tometRev } from '../lib/tomet';
+import { atlasRev, tometRev } from '../lib/tomet';
 
 interface Props {
   title: string;
@@ -26,6 +26,7 @@ const { title, description, nav } = Astro.props;
         <a class="brand" href="/">Tomet<em>Tome to me!!</em></a>
         <nav>
           <a href="/docs/" aria-current={nav === 'docs' ? 'true' : undefined}>ドキュメント</a>
+          <a href="/docs/overview">エコシステム概観</a>
           <a href="/docs/spec/syntax/addressable">アドレス構文</a>
           <a href="/docs/spec/cli/overview">CLI 仕様</a>
         </nav>
@@ -34,8 +35,9 @@ const { title, description, nav } = Astro.props;
     <slot />
     <footer class="site-footer">
       <div class="inner">
-        tomet
-        {tometRev.url ? <a href={tometRev.url}><code>{tometRev.label}</code></a> : <code>{tometRev.label}</code>}
+        <a href={tometRev.url}><code>tomet@{tometRev.label}</code></a>
+        {' · '}
+        <a href={atlasRev.url}><code>atlas@{atlasRev.label}</code></a>
         に基づく
       </div>
     </footer>

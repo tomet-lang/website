@@ -20,6 +20,10 @@ build:
 check:
     npm run check
 
+# Sync catasto-managed upstream schemas and source repositories.
+sync:
+    catasto sync
+
 # Generate and update all derived documentation across the workspace.
 docs:
     tomet export .
@@ -27,6 +31,7 @@ docs:
 
 # Check that all documents parse, format cleanly, and match export targets.
 docs-check:
+    catasto check .
     tomet check .
     tomet format --check .
     tomet export --check .

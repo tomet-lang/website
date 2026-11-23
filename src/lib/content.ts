@@ -4,6 +4,11 @@ import {
   type CollectionEntry,
   type CollectionKey,
 } from "astro:content";
+import type { DocEntry } from "./sections";
+
+export type PublishedDocEntry =
+  | CollectionEntry<"atlas">
+  | CollectionEntry<"docs">;
 
 /**
  * Loads a content collection and throws if it is empty.
@@ -16,6 +21,48 @@ export async function requireCollection<C extends CollectionKey>(
     throw new Error(`Content collection "${collection}" is empty.`);
   }
   return entries;
+}
+
+/**
+ * Loads both `atlas` and `docs` collections and verifies that no route slug
+ * collides across them.
+ */
+export async function loadPublishedDocs(): Promise<{
+  entries: PublishedDocEntry[];
+  docs: DocEntry[];
+}> {
+  const [atlasEntries, specEntries] = await Promise.all([
+    requireCollection("atlas"),
+    requireCollection("docs"),
+  ]);
+
+  const entries: PublishedDocEntry[] = [...atlasEntries, ...specEntries];
+  const seenSlugs = new Map<string, string>();
+  for (const entry of entries) {
+    const slug = entry.data.slug;
+    const existing = seenSlugs.get(slug);
+    if (existing) {
+      throw new Error(
+        `Duplicate document slug "${slug}" in collections "${existing}" and "${entry.collection}" (${entry.data.sourcePath}).`,
+      );
+    }
+    if (entry.id !== slug) {
+      throw new Error(
+        `Document entry id "${entry.id}" does not match slug "${slug}" (${entry.data.sourcePath}).`,
+      );
+    }
+    seenSlugs.set(slug, entry.collection);
+  }
+
+  const docs: DocEntry[] = entries.map((entry) => ({
+    collection: entry.collection,
+    slug: entry.data.slug,
+    title: entry.data.title,
+    sourcePath: entry.data.sourcePath,
+    description: entry.data.description,
+  }));
+
+  return { entries, docs };
 }
 
 /**

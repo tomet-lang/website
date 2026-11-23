@@ -1,0 +1,8 @@
+::kind(element)
+::id(std.card)
+
+@card(title:試し)
+| あああああああああ
+
+@card(title:テスト)
+[ あああああああああああああ ]

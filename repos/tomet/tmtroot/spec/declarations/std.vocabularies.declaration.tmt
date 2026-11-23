@@ -1,0 +1,18 @@
+::kind(element)
+::id(std.vocabularies)
+
+=[ 全容 ]
+
+```tm
+`` ::vocabulary(deck: @file(tmtroot/schema/deck.vocabulary.tmt))
+```
+
+この vault が使う語彙のファイルを、名前をつけて登録する。キー（`deck`）は、ファイルが `::vocabulary(deck, version: "1.0.0")` で名乗る名前空間。語彙のファイル自身の先頭にある `::vocabulary(deck, ...)` は位置引数に名前空間を取り、登録の `::vocabulary(deck: @file(...))` は名前空間をキーにファイルを取る。2つは同じ文書に並ばない。登録の決まりは @file(tmtroot/spec/declarations/std.blueprints.declaration.tmt) と同じ。
+
+=[ 要素はここには書かない ]
+
+どの名前があって、何を取るかは、語彙の文書（`::vocabulary`）が言う。ここは語彙のファイルがどこにあるかだけを書く。`::element`、`::attribute`、`::constructor` の書き方は @file(tmtroot/spec/features/vocabulary.tmt)。
+
+=[ 書く場所 ]
+
+`.tmt` の文書の先頭に一つ。ふつうは @term(tomet#vault-config) か、フォルダの @term(tomet#folder-config) に書く。

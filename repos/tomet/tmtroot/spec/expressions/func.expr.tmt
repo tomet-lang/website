@@ -1,0 +1,62 @@
+::kind(expr)
+::id(expr.func)
+
+組み込み関数と、純粋性。
+
+状態: 実装済み。
+
+関数の細かい引数の取り方は、実装の doc-comment（`tomet-semantics-expr`）を正とする。ここには分類と規則だけを書く。
+
+=[ 純粋な関数 ]
+
+同じ引数なら、いつ呼んでも同じ結果になる。どこでも使える。
+
+- 算術: `add`、`sub`、`mul`、`div`、`mod`
+- 述語: `exists`、`not`
+- 文字: `emoji`、`unicode`
+- アドレス: `tmt`、`ref`、`addr`（@file(tmtroot/spec/expressions/address.expr.tmt)）
+- 断片: `include`、`link`、`raw`（@file(tmtroot/spec/expressions/include.expr.tmt)）
+
+受け手に対する操作（`contains`、日時の整形など）は関数ではなくメソッド（@file(tmtroot/spec/expressions/types.expr.tmt)）。関数は、二つの対等な値の関係と、受け手を持たない操作だけ。
+
+- 比較と論理積・論理和は演算子（@file(tmtroot/spec/expressions/operators.expr.tmt)）。`eq`、`ne`、`gt`、`gte`、`lt`、`lte`、`and`、`or` の関数はない。
+- `not(x)` は真偽値だけを受け取る。`Null`、`0`、空の文字列などを偽として扱うことはしない。`draft` が宣言されたフィールドなら、`not(d::meta.draft == true)` のように書く。
+- `exists(x)` は、`x` が Null でなければ真。`x != null` と同じ意味で、読みやすさのために残している。
+- `emoji` は名前から絵文字を返す。知らない名前はエラー。`unicode` はコードポイントから文字を返す。
+- `link(対象, ラベル)` は対象へのリンクの断片を作る。ラベルは省略可能。ラベルに `none` を渡すと「ラベルなし」ではなく型エラーになる。
+- `raw(テキスト, lang: "...")` はコードブロックの断片を作る。テキストスカラーを受け取り、名前付き引数 `lang` は省略可能。
+- 比較できるのは、数同士、文字列同士、日時同士。それ以外の組み合わせはエラー。
+
+=[ 作成時だけの関数 ]
+
+呼ぶたびに結果が変わる関数は、`generate` 名前空間に集める。作成時（`tomet new`）にだけ使える。
+
+@table
+|[ 関数              ][ 結果                 ]
+|[ `generate.now()`  ][ 今の日時（日時の値） ]
+|[ `generate.uuid()` ][ 新しい UUID v4       ]
+
+```tm
+`` ::meta(
+``   id: ${generate.uuid()}
+``   created: ${generate.now()}
+``   date: ${generate.now().format("YYYY-MM-DD")}
+``   title: ${var.title}
+`` )
+```
+
+- 出力時に `generate.` を使うと、「作成時専用」という専用のエラーになる。出力が再現でき、`tomet export --check` が壊れない。
+- `generate.now()` の時刻は、フィールドに設定されたオフセットに従う（`created` の `offset: "+09:00"` など）。
+- 時計と乱数は、実行側が差し替えられる（`tomet-semantics-expr` の `Generate`）。テストは、これで決定的な出力を得る。
+- 変数 `var.title` は作成時専用ではない。ブループリントの `::var` が宣言し、`tomet new --var key=value` が値を渡す（@file(tmtroot/spec/elements/std.vars.element.tmt)）。作成先のファイル名は `self.filename`。
+
+UUID の形式の検証は式ではなく、フィールドの型で行う。`type: uuid` と宣言したフィールドは、空なら生成され、`tomet check` が形式を検査する。
+
+=[ 知らない入力 ]
+
+受け取れない入力は、エラーにする。入力をそのまま返す、既定の値で動く、といった黙った動きはしない。
+
+=[ まだ決まっていないこと ]
+
+- `emoji` の名前表を、利用者が足せるか（拡張の議題）。
+- 関数・マクロを、言語としてどう足すか。

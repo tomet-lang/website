@@ -1,0 +1,32 @@
+::id(cli.from-md)
+
+`tomet from-md <PATH>`: CommonMark の Markdown を、`.tmt` にする。
+
+状態: 実装済み。ただし、末尾の「現状の実装との差」にある点を除く。
+
+共通の決まりは @file(tmtroot/spec/cli/overview.tmt)。変換器の実装は @file(tmtroot/generated/crates/tomet-markdown.tmt)。
+
+TUI の Migration タブも、Markdown を `.tmt` に変換する。
+
+=[ 変換 ]
+
+どの Markdown も、同じ設定で変換する。設定は `PATH` から祖先を辿って見つけ、なければ既定。
+
+- 表の幅の整え方は、設定（`element.table.adjust_width`、`element.table.max_col_width`、`element.table.align`）に従う。
+- 設定が文書に `id` を求めていれば、足す。
+- 出力は、設定に従って整えた `.tmt`。
+- 出力した `.tmt` を、もう一度読んでみて、読めなければ、その文書の変換は失敗にする（`generated .tmt has parse error: ...`）。書き込む前の検査なので、読めない `.tmt` はできない。
+
+=[ 入力と出力先 ]
+
+`PATH` はファイルか、ディレクトリか、`-`（標準入力）。出力先、`--in-place`、`--dry-run`、`--remove-original` の扱いは、全部の変換コマンドで同じ。@file(tmtroot/spec/cli/overview.tmt) の「変換コマンドの入力と出力先」。
+
+ディレクトリは、その下の Markdown を、vault の索引（`workspace.ignore` が効く）から数える。
+
+=[ 現状の実装との差 ]
+
+- TUI の Migration は、表の整形の設定（`format.table_*`）を変換に渡さない。同じ Markdown でも、表の幅の整え方が、この CLI と違うことがある。
+
+=[ まだ決まっていないこと ]
+
+- なし。

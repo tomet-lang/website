@@ -1,13 +1,11 @@
 import { defineCollection } from "astro:content";
 import { tometLoader } from "@tomet/astro";
 import { resolve } from "node:path";
-import { tometRev } from "./lib/tomet";
+import { atlasRev, tometRev } from "./lib/tomet";
 
-// `.tomet/` links into the locked tomet revision via nix/dev.nix so the
-// documents, vault config, and renderer all come from the exact same revision.
-const tometDir = resolve(process.cwd(), ".tomet");
-const tmtroot = resolve(tometDir, "tmtroot");
-const vaultConfig = resolve(tometDir, "vault.config.tmt");
+const reposDir = resolve(process.cwd(), "repos");
+const tometRepo = resolve(reposDir, "tomet");
+const atlasRepo = resolve(reposDir, "atlas");
 
 /**
  * Empty (0-byte) specification stubs in `tomet`'s `tmtroot/spec/` that are
@@ -53,12 +51,24 @@ export const EXCLUDED_SPEC_STUBS: Readonly<Record<string, string>> = {
 };
 
 export const collections = {
+  atlas: defineCollection({
+    loader: tometLoader({
+      base: resolve(atlasRepo, "docs"),
+      vault: resolve(atlasRepo, "vault.config.tmt"),
+      basePath: "docs",
+      urlPrefix: "/docs",
+      sourcePathPrefix: "atlas/docs",
+      sourceUrl: atlasRev.sourceUrl,
+      advanced: true,
+    }),
+  }),
   docs: defineCollection({
     loader: tometLoader({
-      base: tmtroot,
-      vault: vaultConfig,
+      base: resolve(tometRepo, "tmtroot"),
+      vault: resolve(tometRepo, "vault.config.tmt"),
       basePath: "tmtroot",
-      sourcePathPrefix: "tmtroot",
+      urlPrefix: "/docs",
+      sourcePathPrefix: "tomet/tmtroot",
       sourceUrl: tometRev.sourceUrl,
       advanced: true,
       filter: (relPath) =>

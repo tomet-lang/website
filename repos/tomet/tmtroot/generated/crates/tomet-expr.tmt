@@ -1,0 +1,80 @@
+::kind(api)
+::meta(
+  crate:        tomet-expr
+  dependencies: list(tomet-ast, tomet-ast-parser, tomet-declaration, tomet-span, tomet-tree, tomet-type)
+  dependents:   list(cotomet-eval, tomet-cli, tomet-convert-standalone, tomet-html, tomet-load, tomet-lsp, tomet-markdown, tomet-tests, tomet-transform, tomet-validator-profile, tomet-vault, tomet-workspace)
+)
+
+=[ tomet-expr ]
+
+==[ tomet-expr ]
+
+Expression evaluation for the `${...}` expressions of a Tomet document
+([`InterpExpr`]), following `tmtroot/spec/expressions/`.
+
+==[ Architecture & Responsibilities ]
+
+- ("Pure Boundary (Zero I/O)") Evaluation performs no I/O and reads no clock. What it cannot know by
+itself -- another document, a directory, the vault's settings, the
+time -- comes through [`Resolver`] and [`Generate`], which the layers
+above implement.
+- ("Typed values") [`EvalValue`] is not the `.tmt` data model ([`tomet_ast::Value`]): it
+also holds documents, directories, functions and datetimes, which can
+be the result of an expression and never data. A fragment (`link`,
+`include`) is the one non-scalar value that can be placed in output.
+Structured document parts (inspectable via `.name`, `.prop`, `.id`,
+`.connects`, `.content`, `.item(n)`) are owned [`Part`]s (Layer 2),
+converted from Layer 1 [`tomet_tree::Node`] via [`Part::from_tree_node`].
+- ("Names by position") A name is looked up in the one table its position selects: a call in
+the builtin functions, a bare name in the lambda parameters and then
+the reserved values ([`RESERVED_VALUES`]). There is no fall through,
+and an unknown name is an error.
+- ("No conversions") Operators and methods use the values they are given and convert none
+of them. `&&` and `||` skip their right side once the left decides,
+and take booleans only.
+- ("When it runs") [`Phase::Output`] is rendering; the same expression gives the same
+result every time. [`Phase::Create`] is making a document from a
+blueprint, and is the only place `generate.*` exists. `var` exists in both:
+the variables a document or a vault declares, filled in by `tomet new --var`
+when creating.
+- (Macros) Macros defined by `::macros` are called as `macro.name(...)`. Macro
+arguments are ordinary expressions. Calls check argument counts and
+required named arguments, reporting `unknown macro` when missing.
+
+The pass that puts the values back into a document is
+`tomet_transform::resolve_expressions`.
+
+==[ Functions ]
+
+===[ fn evaluate ]
+
+Evaluates `expr` in `cx`.
+
+===[ fn evaluate_data ]
+
+Evaluates `expr` in `cx`, requiring the result to have a data representation.
+
+If evaluation succeeds but the value cannot be stored as data, an [`EvalError::NotData`]
+is returned.
+
+==[ Constants ]
+
+===[ const RESERVED_VALUES ]
+
+The names that stand for a value and that no lambda parameter may take.
+`generate` exists only while a document is being created.
+
+===[ const FUNCTIONS ]
+
+The functions an expression can call by a bare name, each with a line
+saying what it does -- what an editor offers when `${` is typed.
+
+`addr` is read by the parser rather than called, and is listed because it
+is written like a call. Every other name is one [`builtin`] answers, which
+a test holds to; a function added there is added here, so the editor does
+not offer the language of last month.
+
+===[ const RESERVED_NAMES ]
+
+The names an expression can start with that are values, not functions,
+each with a line saying what it is.

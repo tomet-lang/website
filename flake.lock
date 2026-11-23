@@ -21,11 +21,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1795255945,
-        "narHash": "sha256-34h4koXal/uHbEV+siOOKSwiFTXfIRTGnAgK/JQSQ+c=",
+        "lastModified": 1795472867,
+        "narHash": "sha256-cx3SJwhnKTW5n6y0+jhFldbcv4iX/jfPuJ3iX0ChcSQ=",
         "owner": "tomet-lang",
         "repo": "fs-catasto",
-        "rev": "1aeeb6d0cc2938efb06c7bc47ab09263c7d73035",
+        "rev": "9a84e88dc4538efe248b687003458c0b60cc75b9",
         "type": "github"
       },
       "original": {

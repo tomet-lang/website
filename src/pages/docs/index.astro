@@ -1,43 +1,41 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Sidebar from '../../components/Sidebar.astro';
-import { requireCollection } from '../../lib/content';
-import { docLabel, groupSpecDocs, type DocEntry } from '../../lib/sections';
-import { tometRev } from '../../lib/tomet';
+import { loadPublishedDocs } from '../../lib/content';
+import { entryLabel, groupAllDocs } from '../../lib/sections';
+import { atlasRev, tometRev } from '../../lib/tomet';
 
-const allDocs = await requireCollection('docs');
-const docs: DocEntry[] = allDocs.map((entry) => ({
-  slug: entry.data.slug,
-  title: entry.data.title,
-  sourcePath: entry.data.sourcePath,
-  description: entry.data.description,
-}));
-
-const groups = groupSpecDocs(docs);
-const topicId = (dir: string) => `topic-${dir || 'general'}`;
+const { docs } = await loadPublishedDocs();
+const groups = groupAllDocs(docs);
 ---
 
-<BaseLayout title="仕様ドキュメント — Tomet" nav="docs">
+<BaseLayout title="ドキュメント — Tomet" nav="docs">
   <div class="layout">
     <Sidebar docs={docs} current="" />
 
     <main class="tmt-body">
-      <div class="page-meta"><code>tmtroot/spec/</code></div>
-      <h1>Tomet 仕様ドキュメント</h1>
+      <div class="page-meta">
+        <code>atlas/docs/</code> · <code>tomet/tmtroot/spec/</code>
+      </div>
+      <h1>Tomet ドキュメント</h1>
       <p class="docs-intro">
-        <code>tomet</code>（<code>{tometRev.label}</code>）の <code>tmtroot/spec/</code> から直接レンダリングされた言語・ツールチェイン仕様の一覧です（全 {docs.length} ページ）。
+        <code>atlas</code>（<code>{atlasRev.label}</code>）の横断ガイドと、<code>tomet</code>（<code>{tometRev.label}</code>）の言語・ツールチェイン仕様の一覧です（全 {docs.length} ページ）。
       </p>
 
       {
         groups.map((group) => (
           <section class="spec-group">
-            <h2 id={topicId(group.dir)}>{group.label}</h2>
+            <h2 id={group.id}>{group.label}</h2>
             <p class="spec-blurb">{group.blurb}</p>
             <ul class="spec-list">
               {group.entries.map((entry) => (
                 <li>
                   <a href={`/docs/${entry.slug}`}>
-                    <code>{docLabel(entry.slug, group.dir)}</code>
+                    {entry.collection === 'atlas' ? (
+                      entryLabel(entry, group.dir)
+                    ) : (
+                      <code>{entryLabel(entry, group.dir)}</code>
+                    )}
                   </a>
                   {entry.description && <span class="spec-desc">{entry.description}</span>}
                 </li>
@@ -54,7 +52,7 @@ const topicId = (dir: string) => `topic-${dir || 'general'}`;
         {
           groups.map((group) => (
             <li>
-              <a href={`#${topicId(group.dir)}`}>{group.label}</a>
+              <a href={`#${group.id}`}>{group.label}</a>
             </li>
           ))
         }

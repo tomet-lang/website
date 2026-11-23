@@ -1,0 +1,136 @@
+vocabulary は、文書やデータが使える名前と、それぞれが取る引数を宣言する文書。`::vocabulary(ns)` で
+名前空間を名乗り、名前を三つの表に並べる。
+
+|[ 表             ][ 文書での書き方 ][ 何か ]
+|[ `::element`     ][ `@name`         ][ 要素。文書の本文に置く ]
+|[ `::attribute`   ][ `::name`        ][ 属性。文書の先頭に書き、文書が自分について言う ]
+|[ `::constructor` ][ `ns.name(...)`  ][ コンストラクタ。値の位置に書き、データの値を組み立てる ]
+
+どの表を引くかは書かれた記号が決めるので、同じ名前が二つの表にあってもよい。
+
+```tm
+`` ::kind(vocabulary)
+`` ::vocabulary(deck, version: "1.0.0")
+`` 
+`` ::attribute(
+``   theme: (
+``     singleton: true
+``     about: | 全体の配色。
+``   )
+`` )
+`` 
+`` ::element(
+``   card: (
+``     display: block
+``     about: | カード一枚。
+``     args: (
+``       id: (
+``         type: uint
+``         positional: true
+``         required: true
+``         about: | 通し番号。
+``       )
+``     )
+``   )
+`` )
+```
+
+`version:` は版で、`1.0.0` や `1.10` のように、ピリオドで区切った整数
+（@file(tmtroot/spec/declarations/std.version.declaration.tmt)）。形が違えば `tomet check` が報告する。
+
+#[ 名前はキー ]
+
+三つの表の中身は、名前をキーにしたタプル。`args` の中身は、引数の名前を
+キーにしたタプル。どの段も「キー: フィールドのタプル」という同じ形で、表と引数で
+別の記法を覚える必要がない。名前を `@element(card)` のように括弧の引数へ入れる綴りは
+無い。
+
+`args` のキーの並びが、位置引数の順序を決める。`positional: true` の引数が、書かれた
+順に位置引数の枠を埋める。順序を別に書く `positional: [ ... ]` のような一覧は要らない。
+
+#[ 要素のフィールド ]
+
+|[ フィールド  ][ 既定  ][ 意味 ]
+|[ `display`   ][ 両方  ][ `block` か `inline`。置かれた形がこれと違えば報告される ]
+|[ `singleton` ][ false ][ 一つの文書に一つまで ]
+|[ `args`      ][ なし  ][ 引数のタプル。無いのは「何も言わない」で、「取らない」ではない ]
+|[ `content`   ][ なし  ][ `( allow: )`。`[content]` に何を許すか ]
+|[ `about`     ][ なし  ][ 要素の散文。検査は読まない ]
+
+`content` の `allow:` は、`(a, b)`（この名前だけ）、`inline`（段落一つだけ）、
+`any` のいずれか。詳細は @link[`content-shape.tmt`](file:tmtroot/spec/features/content-shape.tmt)。
+
+要素は本文に置くもので、置き場所を選ぶフィールドは無い。文書の先頭に書くものは属性として宣言する。
+知らないフィールド（`region` もその一つ）は、語彙を読むときに `tomet check` が報告する。
+
+#[ 属性のフィールド ]
+
+`::attribute` は、文書の先頭に `::name(...)` と書く属性を宣言する。フィールドは `about`、`args`、
+`singleton`、`host`（書けるファイル。`tmt`、`ctmt`、`both`）。詳細と検査は
+@file(tmtroot/spec/declarations/std.attribute.declaration.tmt)。
+
+#[ コンストラクタのフィールド ]
+
+`::constructor` は、値の位置に `ns.name(...)` と書くコンストラクタ（データの値を組み立てるもの。計算の `$f()` ではない）を宣言する（@file(tmtroot/spec/declarations/std.constructor.declaration.tmt)）。
+
+|[ フィールド ][ 既定 ][ 意味 ]
+|[ `args`     ][ なし ][ 引数のタプル。フィールドは要素の `args` と同じ ]
+|[ `about`    ][ なし ][ コンストラクタの散文。検査は読まない ]
+
+コンストラクタには `display`、`singleton`、`content` は無い。書けば `tomet check` が報告する。
+呼び出す側（`.tmt` または `.ctmt`）では `::use(ns)` で名前空間をスコープに入れ、`ns.name(...)` と書く。
+
+#[ 名前空間 ]
+
+`std` と文書自身の `::kind` の語彙は、名前を裸で書く。`::use` で入れた語彙の名前は、どの表のものも
+名前空間をつけて書く。`.` が名前空間と名前の区切りで、三つの記号で同じ。
+
+```tm
+`` ::kind(note)
+`` ::use(deck)
+`` ::deck.theme(dark)
+`` 
+`` @deck.card(1)[ 一枚目 ]
+```
+
+`::use(deck, as: d)` と別名をつけた文書では、`::d.theme`、`@d.card` と書く。どう書いても、名前は
+語彙自身の名前空間のもの（`deck.theme`）に解決される（@file(tmtroot/spec/declarations/std.use.declaration.tmt)）。
+
+#[ 引数のフィールド ]
+
+|[ フィールド  ][ 既定  ][ 意味 ]
+|[ `type`      ][ なし  ][ 型の名前（一覧は `tomet_type::Type`）。書かれた引数は、この型で検査される ]
+|[ `positional` ][ false ][ 名前でなく位置で埋められる ]
+|[ `required`  ][ false ][ 無ければ報告される ]
+|[ `default`   ][ なし  ][ 省略時の値。`type` の値でなければ報告される ]
+|[ `about`     ][ なし  ][ 引数の散文。検査は読まない ]
+
+#[ 引数の型 ]
+
+引数に書いた値は、`type:` の型で検査される。`@item(id: abc)` で `id` が `type: uint` なら、
+`tomet check` が報告する。
+
+- 文字の型（`string` `version` `uuid` `nanoid`）は、裸の数や真偽値を、書いたとおりの文字として受ける。
+  `@item(label: 2024)` は文字列 `2024`、`@item(rev: 1.10)` はバージョン `1.10`（`1.1` ではない）。
+- 数の型は、`1.10`（`float`）や `-0`（`int`）のように、書いたとおりに残された数も受ける。
+- `${...}` は、評価されるまで値が分からないので、検査しない。
+- `type:` が型でない（`person`、`set(string)` のように、まだ書き方がないもの）引数は、検査されない。
+  そのことは、語彙を読むときと、語彙の文書を `tomet check` したときに、一度だけ報告される。
+
+#[ 散文は `about:` ]
+
+要素も引数も、説明は `about:` に書く。値は `|` で始まる散文で、これは `[ ... ]` の
+括弧のない形（@link[`pipe.tmt`](file:tests/fixtures/syntax/pipe.tmt)）。次の行が
+同じ列の `|` で始まる限り続き、`|` だけの行は段落を分ける。続かない最初の行が、
+次のキーになる。散文の中の `,` や `}` では値は閉じない。
+
+#[ 旧形式は無い ]
+
+`@element(name){ @args{ @param(name){...} } }[ 散文 ]` の綴りと、`@content{ allow: }` は
+撤去された。互換の読み取りは無い。組み込みで予約される vocabulary 文書の名前は
+`vocabulary`、`elements`、`data` の三つで、`element`、`param`、`args`、`content` は
+ふつうの名前として宣言できる。
+
+#[ 未実装 ]
+
+- `data` の `open:`。

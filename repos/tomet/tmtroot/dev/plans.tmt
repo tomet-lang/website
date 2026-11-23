@@ -1,0 +1,165 @@
+::kind(todo)
+
+`` *> jfieoefjweifej
+`` *> jfioewfjeifjei
+`` 
+`` <%>
+`` <* jslkdfj>
+`` <#tag>
+
+- C#: 属性はクラスとして宣言し、[AttributeUsage(AttributeTargets.Class, AllowMultiple = false)] で、付けられる対象と、何回付けられるかを宣言します。
+- Java: 注釈は @interface で宣言し、@Target（付ける対象）と @Repeatable（複数回）を指定します。
+- Rust: 属性マクロは関数とは別の種類として宣言します（#[proc_macro_attribute]）。
+- Python: デコレータはただの関数で、専用の宣言はありません。ただし、付ける対象や回数を言う手段も持っていません。
+
+- `vault:`と`tmt:`
+- markdownエクスポート時の最後の空行ニ行
+- sort
+- `::use()`で、ネームスペースを省略できるようにすべきかどうか。
+- `@ext`検討
+- `@see-also`とか必要？
+- 設定 -> sectionにすべき、elementにすべき。
+  - `sort`項目が必要。
+- 属性付与->(`@crate`とか`deps`に登録などの挙動に大きく携わりそう。)
+- インクリメンタルパース
+- changeset
+- 現在どうやら`elements`で複数ネームスペースを入れられないみたい。
+- depslock -> `https`なども含めることができ、それをインポートして検証可能にする。
+- 1ファイルエクスポート -> pure tometフォーマットと言う概念を入れる。
+  - 外部ファイルに依存しない一ファイル
+- コメントの中の言及まで書き換える仕組み
+- `--`, `->`で、`--`を説明にする？or `-/`
+- イベント型パーサーに肉薄する 90 MB/s を出している Tomet
+- Onelineを見据えた構文追加``, `*`
+  - `(){}`の`|`みたいに、一行単位で宣言可能にするなにか。`*`, `:prop()`
+- websiteにtmtrootをコピーする
+- `todo`, `task`語彙
+- `@legacy` タグ要素
+- `@comment`, `:target(html, ...)`
+- クレートの責務を把握せずにクレートに手をつけようとするな
+- アプリが対応している語彙を出力
+- 会話形式の語彙
+- `@profile(oneline)`の輸入
+- `tellme`, `show`
+- `@ui`, `@input`, `@html.xxx`
+- 語彙マネージャー？
+  - `@owner`と`fss`？
+- `@type(list)` -> profileでも無いし、ruleか？
+- rust用の追加要素
+- `:rule()`にnamespace
+- 双方向性リンク
+- twrit.*
+- rule補充
+- `fixme()`などを収集したい？
+- exportしたcratesのノートの規則性、blueprint使用。
+- 固有名詞なくす。たそ、00 Obsidianもあるみたい...
+- tove内の`@`は何を意味するのか？
+- `details` and `summary`
+- `:ignore`, `:nocheck`
+- cliの色付け
+- `@cmd`, `@kbd`
+- `[[  ]]`を`@link(ref:)`の糖衣構文(ただし、labelは設定不可能にする。)
+- `{{}}`を`${}`の糖衣構文。
+- vocabularyマネージャー？
+- 日本語対応、組版
+- 一つのファイルで完結するようにする(blueprint, vocabulary)
+- プロパティの重複のワーニング
+- tasksもtmtで、雛形決めたほうが良さそう？
+- リンクの拡張 (関係性,ドメイン(Youtube))
+- mode。`no_data`
+- export force
+- markerの種類にorderedを入れる。
+- `==`の折りたたみ、後ろに装飾の`==`をつけることが可能
+- `[label]:link(https://)`
+- `[label]:style(color:#ffffff):link(https://)`
+  - 今 > `@link[@color[asdfasdf](white)](https:///)`
+- `#`の意味の重複 カラーコード タグ
+- `->`
+- `\n`の統一は決着（`Inline::SoftBreak`/`LineBreak`/`Raw`、`tomet-syntax-ast`）。
+  残るのはhardbreak（`LineBreak`）の記法だけ ── 今は誰も書けない
+- blueprint統合と#[ heading ]:rule
+- idの種類にsha1追加
+- checkのエラー個数指定`@`
+- 設定のドット記法を一般化する。`apply_entry`が`callout.style.content`のような
+  キーごとに手書きの分岐を12本持っている。`.`で分割して入れ子にする一段を
+  入れれば一本で済む。綴りは省略形なので重複ではないが、実装が重複している。
+- `format.quote.always_newline`と`migration`は`default.config.tmt`に
+  書かれているが読む側が無い。実装するか消すか。
+- `@nocheck`                          // 検査の抑制。@draft/@fixme とは別の機能
+                                      // (印を付けるのではなく、規則を止める)
+- 説明書を一ページにエクスポート(Crates.ioみたいな感じで。)
+- 読み込みロード画面
+- 構文変更によるbindigsの乖離
+---[ 構文を決定する ]---
+- ( ) リモート接続の綴り              // `<id:taskA>:{ priority: high }` は `<T>` の
+                                      // 撤去で書けなくなり、作るものも呼ぶものも
+                                      // 無いまま`@references`/`resolve_connect_targets`/
+                                      // `RemoteConnection`だけが残っていたので、
+                                      // 機能ごと削除した
+- ( ) `${}` の `std.` と、裸マクロの拒否   // `macro.` と `self.` は入った。
+                                      // `${gh(12)}` はまだ通る（移行が要る）
+- ( ) `${self.config.*}`               // path と filename だけ入っている
+- ( ) `${file("x.tmt").*}`             // 他の文書を引く。I/O なので resolver 側
+- ( ) 対の後ろの要素が文字列に飲まれる    // `@links{ (1)[a] note: x (2)[b] }` の
+                                      // `note` が `"x (2)[b]"` になる。
+                                      // 要素が先の順序は直っているが、
+                                      // 対が先の順序が残っている
+- ( ) `allow: (link, em)` がリストにならない // `_entry_value` に括弧の形が無く
+                                      // 文字列になる。spec/vocabulary.tmt の
+                                      // `@content{ allow: ... }` が書けない
+- ( ) 全角ブレースを黙って地の文にしない   // パーサは ASCII `{}` しか取らないので
+                                      // `@bookmark(...)｛...｝` は要素ではなく
+                                      // 地の文になる。`tomet check` は通る。
+                                      // 受け付けるか、はっきり落とすか。
+                                      // 黙って別の文書として読むのは、名前空間で
+                                      // 潰した `Custom` の暗黙フォールバックと同じ病
+                                      // (現物: docs/examples/bookmark.tmt)
+---[ 拡張性を確保する ]---
+- ( ) ドキュメントの補充                // 空のまま: guide/builtins/primitives/
+                                      // {link,references}.tmt と
+                                      // guide/builtins/value_dsl/settings_dsl.tmt が
+                                      // 0 バイト。value_dsl/tval.tmt と guide/cli.tmt は
+                                      // 見出しだけ
+- ( ) spec/ と guide/ の .md を生成する  // `.gitattributes` は
+                                      // `docs/{spec,guide}/**/*.md` を
+                                      // linguist-generated として先に宣言済みだが、
+                                      // どちらの `.tmt` も `@config(export:)` を
+                                      // 持たないので今は何にもマッチしない
+- ( ) docs のカスタム要素の名前空間     // 機構は決着済み。kind に紐づくものは
+                                      // その kind の語彙、共有するものは語彙 +
+                                      // `@use`。どちらに振るかが未決:
+                                      // line, node, timestamp, memo, foot, tag,
+                                      // index。共有語彙の名前も未定
+- ( ) `callout` の身分                 // spec/builtin-elements.tmt は組み込みでないと
+                                      // 言い、default.config.tmt は
+                                      // format.callout.style を設定し、guide は
+                                      // `@callout(note)[...]` を教えている。
+                                      // 三つが食い違っている
+- ( ) アイコン、ロゴ
+---[ CLI/Library機能を強化する ]---
+- ( ) 置換/検索
+- ( ) `refactor -i` がコメントを落とす      // AST にコメントノードが無く、
+                                      // 再印字で消える。せめて警告を出すか、
+                                      // CST 経由の書き換えにするか
+- ( ) 変換を強化
+- ( ) Hook                           // 実行すると、規則に従って、指定されたトリガーを見て、処理を実行する（TODO）をアーカイブするとかのはなし。
+---[ 外部機能を強化する ]---
+- ( ) Zed
+  - ( ) フォーマッタ
+  - ( ) サジェスト
+  - ( ) 自動補完
+- ( ) 多言語バインディング
+  - ( ) Go: コア構文安定化後に着手。CGO（C-ABI）を避け、Go の言語思想（ポータビリティ、単一静的バイナリ、`CGO_ENABLED=0`）を尊重するため、Wasm (wazero) による Pure Go 実装とイディオマティックな API（`func Parse(...) (*Document, error)` 等）を採用する。
+- ( ) その他
+---[ ベンチマーク・性能測定 ]---
+- (x) criterion / divan ハーネス整備 (`benches/` パッケージ, parse, format, divan)
+- ( ) 追加ベンチマークの拡充
+  - ( ) `validate/semantics`: バリデーション・意味論検査
+  - ( ) `search`: 検索処理
+  - ( ) `merge`: ドキュメント結合
+  - ( ) `convert`: Markdown / HTML 変換
+  // 留意事項 (Facts to keep):
+  // - `tomet format` は `@link(ref:"X")[t]` を `@link[t](ref:"X")` へ書き換える。
+  //   tomet-corpus と tomet-synth は非正規順序を出力するため、ベンチマークで no-op を
+  //   測定したい場合はあらかじめフォーマットを一度通しておく。
+  // - パース処理は 89e104a8 以降線形。古い非線形カーブの測定値とは直接比較せず再計測すること。

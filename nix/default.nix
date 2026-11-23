@@ -29,7 +29,6 @@ flake-parts.lib.mkFlake { inherit inputs; } {
         ];
         tomet = {
           inherit (tometPkgs) tomet-astro tomet-wasm;
-          inherit (inputs.tomet) outPath;
           # A locked input has `rev`; a dirty git checkout (`just dev-local`) has
           # `dirtyRev`; a `path:` override has neither.
           rev = inputs.tomet.rev or inputs.tomet.dirtyRev or "local";

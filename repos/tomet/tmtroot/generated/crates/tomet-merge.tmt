@@ -1,0 +1,68 @@
+::kind(api)
+::meta(
+  crate:        tomet-merge
+  dependencies: list(tomet-ast-parser, tomet-cst, tomet-cst-parser, tomet-edit)
+  dependents:   list(tomet)
+)
+
+=[ tomet-merge ]
+
+Format-preserving three-way merge and conflict resolution for Tomet
+documents, built on [`tomet_edit::EditDoc`].
+
+When the same note has been edited in two places since the last sync,
+[`merge`] produces a single valid `.tmt` document that combines both
+sets of changes where they do not overlap, and embeds `@conflict`
+markers where they do, while preserving untouched formatting, heading
+padding, blank lines, inline sugar (`*italic*`, `**bold**`, \`code\`),
+comments (`//`, `/* */`), `{ ... }` brace spacing, and fenced code blocks
+byte-for-byte.
+
+# Algorithm
+
+A conflict is narrowed as far down the CST/EditDoc hierarchy as the three
+versions' structure allows before giving up and embedding a marker:
+
+1. @strong[Block sequence (`ChildItem`s)] — `diff3` aligns top-level blocks,
+section children, and element `[content]` blocks. Non-overlapping
+insertions, deletions, and replacements merge cleanly, preserving
+original trivia and comments.
+2. @strong[Single-block narrowing] — when a conflict region has equal block
+counts on `base`, `local`, and `remote`, each triple is narrowed:
+
+- three `Paragraph`s -> inline item diff, then word/whitespace/punct
+
+diff on conflicting plain text runs -> inline
+`@conflict(a: [ ... ], b: [ ... ])`;
+
+- three `Section`s of the same level and `#(id)` -> narrow heading
+
+inlines and section children independently;
+
+- three `BlockForm`s with the same sigil and `#(id)` -> narrow
+
+`(args)`, `[content]`, and `{data}` slots independently;
+
+- three `List`s / `ListItem`s -> narrow list children or item text;
+  - two `{data}` / `(args)` maps -> key-by-key three-way merge preserving
+
+untouched entry slices and brace padding, narrowing conflicting
+values to `@conflict(a: <local>, b: <remote>)`.
+3. @strong[Block-level fallback] — when block kinds or counts disagree,
+emit a block-level `@conflict(a: [ ... ], b: [ ... ])` element.
+
+A value that is written as a `|` run (`about: | text`) cannot stand
+inside `@conflict(a: ..., b: ...)`, where it would swallow the `, b: ...`;
+it is written there as the `[ ... ]` it means.
+
+# Conflicts
+
+[`find_conflicts`] lists the markers of a document and [`resolve`],
+[`resolve_all`] and [`resolve_single`] take them out by choosing a side. They read the
+CST, so a marker is found wherever the text has one -- a paragraph, a list
+item, a heading, an element's content, a value -- and each comes with its
+byte span and its sides as written, never printed again.
+
+A marker that cannot be read (unclosed, a side missing, a third key) is a
+[`ConflictError`], not a marker to step over: [`has_conflicts`] says `true`
+for it, and nothing resolves past it.

@@ -1,0 +1,88 @@
+::kind(api)
+::meta(
+  crate:        tomet-printer
+  dependencies: list(tomet-ast, tomet-ast-parser, tomet-config, tomet-field-utils, tomet-formatter, tomet-markdown, tomet-semantics, tomet-span, tomet-style, tomet-tree)
+  dependents:   list(tomet, tomet-cli, tomet-convert-standalone, tomet-html, tomet-markdown, tomet-pandoc, tomet-spec, tomet-tests, tomet-typst, tomet-workspace)
+)
+
+=[ tomet-printer ]
+
+Serializes a `tomet_ast::File` back to `.tmt` source text
+(no span info required, unlike `tomet-formatter`, which
+re-formats existing `.tmt` text losslessly using spans -- this crate
+is for documents that never had `.tmt` source to begin with, e.g.
+ones built from Markdown or edited purely at the AST level). Uses
+`tomet_config::PrinterConfig` (see that crate for config
+loading/discovery) to drive formatting choices: meta format
+(yaml/json/toml), link-key spacing, callout/list style, via
+`tomet-style`'s single-node renderers. Also owns `::meta` id
+auto-generation (`ensure_document_id_with_config`, which mutates the
+AST directly), built on the pure generate/validate/convert helpers
+in `tomet-field-utils`.
+
+==[ Module block ]
+
+Rendering blocks, sections, headings, and lists.
+
+==[ Module element ]
+
+Rendering elements, values, args, and connects.
+
+===[ Functions ]
+
+====[ fn render_element ]
+
+Render an [`Element`] AST node into Tomet syntax:
+`<sigil><name>(args)[content]{value}`.
+
+====[ fn render_bare ]
+
+Render a [`Bare`] entry into Tomet syntax: `(args)[content]{value}#(id)`,
+with no head.
+
+====[ fn render_hole ]
+
+Render a [`Hole`] AST node into Tomet syntax:
+`<?matcher(args){value}>[content]`.
+
+The head, the matcher and the `(args)` and `{value}` groups, is inside the box and
+the `[content]` follows its `>`, however `args` and `content` are ordered for an element.
+
+====[ fn render_declaration ]
+
+Render a [`Declaration`] AST node into Tomet syntax:
+`::name(args)[content]{value}#(id)`.
+
+==[ Module id ]
+
+ID generation and rendering helpers.
+
+===[ Functions ]
+
+====[ fn ensure_document_id_with_config ]
+
+Ensures that a document has an `::id(...)` declaration if configured to do so.
+
+The generation is configured by the vault's `id` meta field (`type`, `force`, `overwrite`, ...).
+A new declaration goes after the leading `::version` / `::kind`, so the preamble reads
+`::kind`, `::id`, `::meta`.
+
+==[ Module inline ]
+
+Rendering inline content and block-permitted content runs.
+
+==[ Functions ]
+
+===[ fn document_to_tm ]
+
+Serialize a [`File`] AST into Tomet (`.tmt`) source string using document-level config or defaults.
+
+===[ fn hole_to_tm ]
+
+A [`tomet_ast::Hole`] as the box it was written as, `<?matcher(args){value}>[content]`,
+with the document-independent default configuration.
+
+For a reader that has no rendering of a hole and shows it as it was written, the way an
+interpolation nobody evaluated is shown (`tomet-convert-*`).
+
+===[ fn document_to_tm_with_config ]
