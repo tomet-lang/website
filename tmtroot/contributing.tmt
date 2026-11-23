@@ -49,7 +49,7 @@ Keep commit logs clean and focused on technical changes.
 
 ==[ Verification ]
 
-Before committing or submitting changes, ensure all checks pass:
-- `just check`: Runs Astro type/syntax check (`astro check`).
-- `just build`: Verifies static production build.
-- `just docs-check`: Ensure documentation artifacts are up to date and valid.
+Before committing or submitting changes, ensure all checks pass inside the Nix dev shell:
+-| `just check`: Runs Astro and TypeScript type/syntax checks (`astro check`) and validates content collection schemas.
+-| `just build`: Runs the strict production build, failing on any `tometLoader` diagnostic/parse/vault error, missing required entry/HTML, or broken internal link/anchor in `dist/`.
+-| `just docs-check`: Verifies `tomet check .`, `tomet format --check .`, and `tomet export --check .` on this repository's `.tmt` sources and generated Markdown files.

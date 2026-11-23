@@ -1,20 +1,20 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Sidebar from '../../components/Sidebar.astro';
+import { requireCollection, requireRenderedHtml } from '../../lib/content';
+import type { DocEntry } from '../../lib/sections';
 
 export async function getStaticPaths() {
-  const allDocs = await getCollection('docs');
-  const contentDocs = allDocs.filter((entry) => entry.id !== 'README');
+  const allDocs = await requireCollection('docs');
 
-  // Map docs list for sidebar navigation
-  const docs = contentDocs.map((entry) => ({
+  const docs: DocEntry[] = allDocs.map((entry) => ({
     slug: entry.data.slug,
-    section: entry.data.section,
+    title: entry.data.title,
     sourcePath: entry.data.sourcePath,
+    description: entry.data.description,
   }));
 
-  return contentDocs.map((entry) => ({
+  return allDocs.map((entry) => ({
     params: { slug: entry.id },
     props: { entry, docs },
   }));
@@ -22,13 +22,16 @@ export async function getStaticPaths() {
 
 const { entry, docs } = Astro.props;
 const { title, sourcePath, toc, isDataOnly } = entry.data;
-const html = entry.rendered?.html ?? '';
+const html = isDataOnly ? '' : requireRenderedHtml(entry);
 const source = isDataOnly ? entry.body : null;
+if (isDataOnly && !source) {
+  throw new Error(`Data-only entry "${entry.id}" has no source body.`);
+}
 ---
 
 <BaseLayout title={`${title} — Tomet`} nav="docs">
   <div class="layout">
-    <Sidebar docs={docs as any} current={entry.id} />
+    <Sidebar docs={docs} current={entry.id} />
 
     <main class="tmt-body">
       <div class="page-meta">

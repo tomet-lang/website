@@ -11,13 +11,19 @@ if (!rev) {
 }
 
 const isCommit = /^[0-9a-f]{40}(-dirty)?$/.test(rev);
+const isCleanCommit = isCommit && !rev.endsWith("-dirty");
+const gitRef = isCleanCommit ? rev : "main";
 
 export const tometRev = {
   /** Short form for display: `115afe9`, `115afe9-dirty` or `local`. */
   label: isCommit ? rev.slice(0, 7) + (rev.endsWith("-dirty") ? "-dirty" : "") : rev,
   /** The commit on GitHub, when the revision is a clean one. */
-  url:
-    isCommit && !rev.endsWith("-dirty")
-      ? `https://github.com/tomet-lang/tomet/commit/${rev}`
-      : undefined,
+  url: isCleanCommit
+    ? `https://github.com/tomet-lang/tomet/commit/${rev}`
+    : undefined,
+  /** Source links for files/directories outside the published docs collection. */
+  sourceUrl: {
+    file: `https://github.com/tomet-lang/tomet/blob/${gitRef}/{path}`,
+    dir: `https://github.com/tomet-lang/tomet/tree/${gitRef}/{path}`,
+  },
 };

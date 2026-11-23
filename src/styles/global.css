@@ -497,3 +497,34 @@ pre {
 .site-footer a {
   color: inherit;
 }
+
+/* ---------- docs index ---------- */
+
+.docs-intro {
+  color: var(--muted);
+}
+
+.spec-blurb {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.spec-list {
+  list-style: none;
+  padding-left: 0 !important;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.spec-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.75rem;
+  margin: 0;
+}
+
+.spec-desc {
+  color: var(--muted);
+  font-size: 0.875rem;
+}

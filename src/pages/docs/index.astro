@@ -1,49 +1,64 @@
 ---
-import { getCollection, getEntry } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Sidebar from '../../components/Sidebar.astro';
+import { requireCollection } from '../../lib/content';
+import { docLabel, groupSpecDocs, type DocEntry } from '../../lib/sections';
+import { tometRev } from '../../lib/tomet';
 
-const allDocs = await getCollection('docs');
-const docs = allDocs
-  .filter((entry) => entry.id !== 'README')
-  .map((entry) => ({
-    slug: entry.data.slug,
-    section: entry.data.section,
-    sourcePath: entry.data.sourcePath,
-  }));
+const allDocs = await requireCollection('docs');
+const docs: DocEntry[] = allDocs.map((entry) => ({
+  slug: entry.data.slug,
+  title: entry.data.title,
+  sourcePath: entry.data.sourcePath,
+  description: entry.data.description,
+}));
 
-// `docs/README.tmt` is the map the repo's own AGENTS.md points contributors
-// at, so it is the natural landing page for the documentation section.
-const landing = await getEntry('docs', 'README');
-const html = landing?.rendered?.html ?? '';
-const title = landing?.data?.title ?? 'ドキュメント';
-const toc = landing?.data?.toc ?? [];
+const groups = groupSpecDocs(docs);
+const topicId = (dir: string) => `topic-${dir || 'general'}`;
 ---
 
-<BaseLayout title={`${title} — Tomet`} nav="docs">
+<BaseLayout title="仕様ドキュメント — Tomet" nav="docs">
   <div class="layout">
-    <Sidebar docs={docs as any} current="" />
+    <Sidebar docs={docs} current="" />
 
     <main class="tmt-body">
-      <div class="page-meta"><code>docs/README.tmt</code></div>
-      <Fragment set:html={html} />
-    </main>
+      <div class="page-meta"><code>tmtroot/spec/</code></div>
+      <h1>Tomet 仕様ドキュメント</h1>
+      <p class="docs-intro">
+        <code>tomet</code>（<code>{tometRev.label}</code>）の <code>tmtroot/spec/</code> から直接レンダリングされた言語・ツールチェイン仕様の一覧です（全 {docs.length} ページ）。
+      </p>
 
-    <nav class="toc">
       {
-        toc.length > 0 && (
-          <>
-            <h2>このページ</h2>
-            <ul>
-              {toc.map((item: { id: string; level: number; text: string }) => (
-                <li class={`lvl-${item.level}`}>
-                  <a href={`#${item.id}`}>{item.text}</a>
+        groups.map((group) => (
+          <section class="spec-group">
+            <h2 id={topicId(group.dir)}>{group.label}</h2>
+            <p class="spec-blurb">{group.blurb}</p>
+            <ul class="spec-list">
+              {group.entries.map((entry) => (
+                <li>
+                  <a href={`/docs/${entry.slug}`}>
+                    <code>{docLabel(entry.slug, group.dir)}</code>
+                  </a>
+                  {entry.description && <span class="spec-desc">{entry.description}</span>}
                 </li>
               ))}
             </ul>
-          </>
-        )
+          </section>
+        ))
       }
+    </main>
+
+    <nav class="toc">
+      <h2>トピック</h2>
+      <ul>
+        {
+          groups.map((group) => (
+            <li>
+              <a href={`#${topicId(group.dir)}`}>{group.label}</a>
+            </li>
+          ))
+        }
+      </ul>
     </nav>
   </div>
 </BaseLayout>

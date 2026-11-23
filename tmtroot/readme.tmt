@@ -27,6 +27,7 @@ The `tomet` input in `flake.lock` is the only tomet this site knows.
 The dev shell links it into `.tomet/`:
 -| `.tomet/astro`, `.tomet/wasm`: `@tomet/astro` and `@tomet/wasm` built from that revision. `package.json` depends on them with `file:`.
 -| `.tomet/tmtroot`: the documents of that revision, which the docs collection loads.
+-| `.tomet/vault.config.tmt`: the vault config of that revision, resolving vocabularies, dictionaries, and blueprints alongside `.tomet/tmtroot`.
 
 The `tomet` CLI in the shell is built from the same input, and the footer of every page names the revision.
 The build refuses to run outside the dev shell, where no revision is set.
@@ -59,8 +60,12 @@ npm run preview
 
 ==[ Published Content ]
 
-The site serves documentation from:
--| `docs/guide`: User tutorials and comprehensive guides.
--| `docs/spec`: Formal syntax and semantics specification.
--| `docs/examples`: Real-world document examples.
--| `docs/why`: Design rationale, architectural ethos, and background.
+The site publishes the language and toolchain specification from `tmtroot/spec/` in `tomet` (`docs/`), grouped by topic (`syntax`, `forms`, `expressions`, `declarations`, `elements`, `features`, `division`, `cli`, `lsp`, `bindings`).
+Unwritten 0-byte specification stubs are explicitly excluded by path with documented reasons in `src/content.config.ts` rather than skipped silently.
+
+==[ Strict Build Guarantees ]
+
+Production builds (`just build`) fail fast on any content or link defect:
+-| **Loader & Vault validation**: `tometLoader` validates `.tomet/vault.config.tmt` and fails with all parse errors, empty documents, unknown elements, `@draft` markers, and unresolved links at once.
+-| **Required collection & entry checks**: Page templates use `requireCollection`, `requireEntry`, and `requireRenderedHtml` so missing collections, missing entries, or empty HTML outputs fail the build.
+-| **Post-build link & anchor verification**: `src/integrations/check-links.ts` scans all generated HTML pages in `astro:build:done` and fails the build if any internal `href` or `#fragment` target is missing.
