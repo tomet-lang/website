@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { tometRev } from '../lib/tomet';
 
 interface Props {
   title: string;
@@ -30,5 +31,12 @@ const { title, description, nav } = Astro.props;
       </div>
     </header>
     <slot />
+    <footer class="site-footer">
+      <div class="inner">
+        tomet
+        {tometRev.url ? <a href={tometRev.url}><code>{tometRev.label}</code></a> : <code>{tometRev.label}</code>}
+        に基づく
+      </div>
+    </footer>
   </body>
 </html>

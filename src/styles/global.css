@@ -480,3 +480,20 @@ pre {
   border-left-color: #d9822b;
   background: rgba(217, 130, 43, 0.08);
 }
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  margin-top: 4rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.site-footer .inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 1rem 1.25rem;
+}
+
+.site-footer a {
+  color: inherit;
+}
