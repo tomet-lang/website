@@ -790,11 +790,11 @@
         "twrit": []
       },
       "locked": {
-        "lastModified": 1795428493,
-        "narHash": "sha256-ii/G2QqC08s5byPxonE2cPMZisCyDYjUNAiuCpxyVBk=",
+        "lastModified": 1795431347,
+        "narHash": "sha256-r9e65XrRTNiK97BksASz3adrqaHVOh85Qy+rattIxI4=",
         "owner": "tomet-lang",
         "repo": "tomet",
-        "rev": "25b85104407fe6ccf3dd93ce48470d11c08be1a0",
+        "rev": "2c74de698cc94aae63c1103c8bdaebed144c09ac",
         "type": "github"
       },
       "original": {
