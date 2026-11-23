@@ -3,6 +3,7 @@
   mkShell,
 
   tools,
+  tomet,
   ...
 }:
 mkShell {
@@ -16,7 +17,18 @@ mkShell {
     nodejs
   ];
 
+  # Read by src/lib/tomet.ts; the site refuses to build without it.
+  TOMET_REV = tomet.rev;
+
+  # `.tomet/` is the only way the site reaches tomet: package.json depends on
+  # `file:.tomet/astro` and `file:.tomet/wasm`, the content loader reads
+  # `.tomet/tmtroot`. Every link points into the same locked revision, and the
+  # store paths stay alive as long as this shell does.
   shellHook = ''
-    echo "📖 Tomet"
+    mkdir -p .tomet
+    ln -sfn ${tomet.tomet-astro} .tomet/astro
+    ln -sfn ${tomet.tomet-wasm} .tomet/wasm
+    ln -sfn ${tomet.outPath}/tmtroot .tomet/tmtroot
+    echo "📖 Tomet @ ${tomet.rev}"
   '';
 }

@@ -15,7 +15,19 @@
     };
 
     # --- Tool ---
-    sisho.url = "github:tomet-lang/sisho";
+    # The one tomet revision this site is about: its CLI (through sisho), its
+    # renderer (@tomet/astro + @tomet/wasm) and its documents all come from here.
+    tomet = {
+      url = "github:tomet-lang/tomet";
+      inputs.twrit.follows = "";
+      inputs.tomet-shelf.follows = "";
+      inputs.catasto.follows = "";
+      inputs.sisho.follows = "";
+    };
+    sisho = {
+      url = "github:tomet-lang/sisho";
+      inputs.tomet.follows = "tomet";
+    };
   };
 
   outputs = inputs: import ./nix inputs;

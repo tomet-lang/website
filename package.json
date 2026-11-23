@@ -10,7 +10,8 @@
     "check": "astro check"
   },
   "dependencies": {
-    "@tomet/astro": "file:../tomet/packages/astro",
+    "@tomet/astro": "file:.tomet/astro",
+    "@tomet/wasm": "file:.tomet/wasm",
     "astro": "^5.6.1"
   },
   "devDependencies": {

@@ -7,6 +7,11 @@ default:
 dev:
     npm run dev
 
+# Start the dev server against a local tomet checkout instead of the locked
+# revision. Only files git tracks there are seen; `path:` would copy `target/`.
+dev-local tomet="../tomet":
+    nix develop --override-input tomet "git+file:$(realpath {{tomet}})" --command npm run dev
+
 # Build the production site.
 build:
     npm run build

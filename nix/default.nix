@@ -18,6 +18,7 @@ flake-parts.lib.mkFlake { inherit inputs; } {
       system = pkgs.stdenv.hostPlatform.system;
       sisho = inputs.sisho.packages.${system};
       sishoLib = inputs.sisho.legacyPackages.${system};
+      tometPkgs = inputs.tomet.packages.${system};
     in
     {
       devShells.default = pkgs.callPackage ./dev.nix {
@@ -26,6 +27,13 @@ flake-parts.lib.mkFlake { inherit inputs; } {
           sisho.toolchain
           sisho.tomet-lsp
         ];
+        tomet = {
+          inherit (tometPkgs) tomet-astro tomet-wasm;
+          inherit (inputs.tomet) outPath;
+          # A locked input has `rev`; a dirty git checkout (`just dev-local`) has
+          # `dirtyRev`; a `path:` override has neither.
+          rev = inputs.tomet.rev or inputs.tomet.dirtyRev or "local";
+        };
       };
 
       treefmt = import ./formatter.nix {
